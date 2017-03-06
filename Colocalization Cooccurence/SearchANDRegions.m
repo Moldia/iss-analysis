@@ -1,7 +1,9 @@
 % search regions where all specified genes co-occur
 % Xiaoyan, 2017
 
-[name, pos] = getinsitudata('Decoding\beforeQT_details.csv');
+[name, pos] = getinsitudata('C:\Users\qxyyx\Desktop\temp\beforeQT_details.csv');
 
-search_reads_cooccur(name, pos, 100, {'Drd3', 'Prrx1', 'Ctdnep1'});
+cooccur = search_reads_cooccur(name, pos, 100);
+cooccur = search_reads_cooccur(name, pos, 100, {'Drd3', 'Prrx1', 'Ctdnep1'});
+
 

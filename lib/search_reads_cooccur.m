@@ -16,7 +16,7 @@ idxQ = idxQ(1);
 posquery = pos(idxName==idxQ,:);
 
 % range search
-[idxNN, dNN] =  rangesearch(pos, posquery, distlim);
+[idxNN, dNN] = rangesearch(pos, posquery, distlim);
 maxNN = max(cellfun(@length, idxNN));
 idxNN = cellfun(@(v) [v, zeros(1, maxNN-length(v))], idxNN, 'uni', 0);
 idxNN = reshape([idxNN{:}], maxNN, [])';
@@ -55,23 +55,16 @@ if ~isempty(positives)
     positives = positives(unipos,:);
     
     % visualization
-    outsize = distlim*2;
+    boxsize = distlim*2;
     hold on;
-    D = unique(positives(:,3));
-    for i = 1:length(D)
-        tempidx = positives(positives(:,3)==D(i),:);
-        for j = 1:size(tempidx,1)
-            plot([tempidx(j,1)-D(i), tempidx(j,1)-D(i), tempidx(j,1)+D(i), tempidx(j,1)+D(i), tempidx(j,1)-D(i)],...
-                [tempidx(j,2)+D(i), tempidx(j,2)-D(i), tempidx(j,2)-D(i), tempidx(j,2)+D(i), tempidx(j,2)+D(i)], 'y');
-        end
-    end
-    
     for i = 1:size(positives,1)
-        plot([positives(i,4)-outsize, positives(i,4)-outsize, positives(i,4)+outsize, positives(i,4)+outsize, positives(i,4)-outsize],...
-            [positives(i,5)+outsize, positives(i,5)-outsize, positives(i,5)-outsize, positives(i,5)+outsize, positives(i,5)+outsize],...
+        plot([positives(i,1)-positives(i,3), positives(i,1)-positives(i,3), positives(i,1)+positives(i,3), positives(i,1)+positives(i,3), positives(i,1)-positives(i,3)],...
+            [positives(i,2)+positives(i,3), positives(i,2)-positives(i,3), positives(i,2)-positives(i,3), positives(i,2)+positives(i,3), positives(i,2)+positives(i,3)], 'y');
+        plot([positives(i,4)-boxsize, positives(i,4)-boxsize, positives(i,4)+boxsize, positives(i,4)+boxsize, positives(i,4)-boxsize],...
+            [positives(i,5)+boxsize, positives(i,5)-boxsize, positives(i,5)-boxsize, positives(i,5)+boxsize, positives(i,5)+boxsize],...
             'w', 'linewidth', 2);
     end
-else
+ else
     disp('No co-occurence of all reads within given distance.');
 end
 

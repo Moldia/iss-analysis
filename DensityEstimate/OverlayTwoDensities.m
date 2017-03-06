@@ -15,8 +15,8 @@ use_absolute_count = 0;
 
 %% 
 % all transcripts
-[name,pos] = getinsitudata(decoded_file);
-pos = correctcoord(pos,.2);
+[name, pos] = getinsitudata(decoded_file);
+pos = correctcoord(pos, .2);
 
 % unique transcripts
 [uniName, ~, idxName] = unique(name);
@@ -39,7 +39,7 @@ layer = [1 0 0; 0 1 1];
 for i = 1:2
     pos_density = pos(idxName==idx(i),:);
     if use_absolute_count
-        temp = floor(pos_density/5);
+        temp = floor(pos_density*scale);
         temp(temp==0) = 1;
         Itemp = accumarray(fliplr(temp), 1, floor(imsize/5));
         fh = fspecial('gaussian', bandwid*2, bandwid/5);
