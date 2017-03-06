@@ -1,7 +1,12 @@
-function positives = search_reads_alloccur(name, pos, distlim)
+function positives = search_reads_cooccur(name, pos, distlim, searchname)
 % find where all reads occur together
 % Xiaoyan, 2017
 
+
+uniName = unique(name);
+if nargin > 3
+    [name, pos] = removereads(name, setdiff(uniName, searchname), pos);
+end
 
 % use the least abundant one as query
 [uniName, ~, idxName] = unique(name);
@@ -21,7 +26,7 @@ dNN = reshape([dNN{:}], maxNN, [])';
 % step distance
 positives = [];
 d = 5;
-while d < distlim
+while d <= distlim
     tempidx = idxNN.*(double(dNN<=d));
     nameNN = tempidx;
     nameNN(nameNN~=0) = idxName(nameNN(nameNN~=0));
@@ -43,11 +48,14 @@ while d < distlim
     end
      d = d + 5;
 end
-[~, unipos] = unique(positives(:,4:5), 'rows');
-positives = positives(unipos,:);
 
-% visualization
+
 if ~isempty(positives)
+    [~, unipos] = unique(positives(:,4:5), 'rows');
+    positives = positives(unipos,:);
+    
+    % visualization
+    outsize = distlim*2;
     hold on;
     D = unique(positives(:,3));
     for i = 1:length(D)
@@ -57,11 +65,11 @@ if ~isempty(positives)
                 [tempidx(j,2)+D(i), tempidx(j,2)-D(i), tempidx(j,2)-D(i), tempidx(j,2)+D(i), tempidx(j,2)+D(i)], 'y');
         end
     end
-
+    
     for i = 1:size(positives,1)
-        plot([positives(i,4)-distlim*2, positives(i,4)-distlim*2, positives(i,4)+distlim*2, positives(i,4)+distlim*2, positives(i,4)-distlim*2],...
-            [positives(i,5)+distlim*2, positives(i,5)-distlim*2, positives(i,5)-distlim*2, positives(i,5)+distlim*2, positives(i,5)+distlim*2],...
-            'w');
+        plot([positives(i,4)-outsize, positives(i,4)-outsize, positives(i,4)+outsize, positives(i,4)+outsize, positives(i,4)-outsize],...
+            [positives(i,5)+outsize, positives(i,5)-outsize, positives(i,5)-outsize, positives(i,5)+outsize, positives(i,5)+outsize],...
+            'w', 'linewidth', 2);
     end
 else
     disp('No co-occurence of all reads within given distance.');
