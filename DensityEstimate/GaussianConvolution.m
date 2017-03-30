@@ -12,28 +12,28 @@ name_density = 'Pvalb';
 bandwid = 50;
 
 %% transcripts
-[name,Pos] = getinsitudata(decoded_file,1,1);
+[name, pos] = getinsitudata(decoded_file);
 
 % unique transcripts
-[name_uni,~,idx_re] = unique(name);
-[p,q] = hist(idx_re,unique(idx_re));
+[uniName, ~, idxName] = unique(name);
+[p, q] = hist(idxName,unique(idxName));
 
 %% image size
-imgin = imfinfo(image);
-Isize = [imgin.Height,imgin.Width];
+img = imfinfo(image);
+imsize = [img.Height, img.Width];
 
 %% gaussian smoothing
-idx_gaussian = find(strcmp(name_uni,name_density));
-if isempty(idx_gaussian)
+idx = find(strcmp(uniName, name_density));
+if isempty(idx)
     error('No specified transcript detected in the input file');
 end
-pos_gaussian = Pos(idx_re==idx_gaussian,1:2);
+pos_gaussian = pos(idxName==idx, :);
 
 temp = floor(pos_gaussian/5);
 temp(temp==0) = 1;
-Itemp = accumarray(fliplr(temp),1,floor(Isize/5));
-fh = fspecial('gaussian',bandwid*2,bandwid/5);
-Itemp = imfilter(Itemp,fh);
+Itemp = accumarray(fliplr(temp), 1, floor(imsize/5));
+fh = fspecial('gaussian', bandwid*2, bandwid/5);
+Itemp = imfilter(Itemp, fh);
 
 figure;
 imshow(Itemp/max(fh(:)),[]);
