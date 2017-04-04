@@ -42,5 +42,5 @@ density = imresize(density, [imsize(1)/5 imsize(2)/5]);
 
 figure;
 imshow(density,[]);
-colormap(parula);
+colormap(gca, parula);
 title(name_density);

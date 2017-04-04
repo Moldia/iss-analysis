@@ -38,7 +38,7 @@ for i = 1:length(uniName)
     if mod(i-1,12)==0 && i~=1
         drawnow;
         f = f+1;
-        saveas(gcf, ['DensityLog2_', num2str(bandwidth), '_', num2str(f), '.png']);
+        saveas(gcf, ['Density_', num2str(bandwidth), '_', num2str(f), '.png']);
         disp([num2str(12*f) ' transcripts are finished.']);
         
         clf;
@@ -55,12 +55,10 @@ for i = 1:length(uniName)
     end
     density = imresize(density, [imsize(1)/5, imsize(2)/5]);
     subplot(3, 4, i-f*12);
-    density = density-min(density(:))+1;
     imshow(log2(density), []);
-    set(gca, 'YDir', 'normal'); % image upside down
-    colormap(hot);
+    colormap(gca, parula);
     title([uniName{i}, ' (', num2str(countName(i)), ')']);
 end
 disp('All transcripts are finished.')
-saveas(gcf, ['DensityLog2_', num2str(bandwidth), '_', num2str(f+1), '.png']);
+saveas(gcf, ['Density_', num2str(bandwidth), '_', num2str(f+1), '.png']);
 
