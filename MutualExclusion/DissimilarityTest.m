@@ -2,16 +2,25 @@
 % two-sample Kolmogorov-Smirnov test
 % Xiaoyan, 2017
 
-[name, pos] = getinsitudata('Decoding\QT_0.5_0_details.csv');
+input_file = 'Decoding\QT_0.45_0_details.csv';
+% genes with read lower than this threshold will not be used in analysis
+count_threshold = 30; 
+% size of the bin
+bin_size = 200;
+
+
+[name, pos] = getinsitudata('Decoding\QT_0.45_0_details.csv');
 [uniName, ~, idxName] = unique(name);
 histName = hist(idxName, 1:max(idxName));
 
-% remove NNNN and any reads<30
-[name, pos] = removereads(name, [uniName(histName<30); {'NNNN'}], pos);
+% remove NNNN and any reads<count_threshold
+[name, pos] = removereads(name, [uniName(histName<count_threshold); {'NNNN'}], pos);
 [uniName, ~, idxName] = unique(name);
 
 % bin
-pos_bin = ceil(pos/200);
+plot_all_onblack(input_file);
+show_square_lines(gcf, bin_size, bin_size, 'w');
+pos_bin = ceil(pos/bin_size);
 pos_bin = max(pos_bin(:,1))*(pos_bin(:,1)-1) + pos_bin(:,2);
 
 
@@ -25,17 +34,17 @@ for i = 1:length(uniName)
         ksstat(j,i,2) = p;
     end
 end
-figure; imagesc(ksstat(:,:,2));
-set(gca, 'xtick', 1:length(uniName), 'xticklabel', uniName,...
-    'ytick', 1:length(uniName), 'yticklabel', uniName,...
-    'xticklabelrotation', 90);
+% figure; imagesc(ksstat(:,:,2));
+% set(gca, 'xtick', 1:length(uniName), 'xticklabel', uniName,...
+%     'ytick', 1:length(uniName), 'yticklabel', uniName,...
+%     'xticklabelrotation', 90);
 
 
 % sorting
 L = linkage(ksstat(:,:,2));
 order = dendroperm(L);
 
-figure; imagesc(ksstat(order,order,2));
+figure; imagesc(ksstat(order,order,2)); grid on;
 set(gca, 'xtick', 1:length(uniName), 'xticklabel', uniName(order),...
     'ytick', 1:length(uniName), 'yticklabel', uniName(order),...
     'xticklabelrotation', 90);

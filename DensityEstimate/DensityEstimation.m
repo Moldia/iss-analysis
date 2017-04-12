@@ -8,9 +8,9 @@ drawnow;
 %% parameters
 decoded_file = 'K:\161230_161220KI_3-1\Kenneth\hippocampi\hippocampus1\spots_ROI1.csv';
 image = 'K:\161230_161220KI_3-1\Kenneth\hippocampi\hippocampus1\Ab_c1_ROI1.tif';    % important for size
-scale = 1;
+scale = 1;      % image scale
 name_density = 'Pvalb';
-bandwid = 50;  % in original scale
+bandwid = 50;   % in original scale
 
 %%
 % all transcripts
@@ -33,7 +33,7 @@ end
 pos_density = pos(idxName==idx, :);
 
 if size(pos_density,1)>2
-    [bandwidth, density, X, Y]=kde2d_modified(pos_density, 2^10, [0 0],...
+    [~, density] = kde2d_modified(pos_density, 2^10, [0 0],...
         floor([imsize(2)/scale/5 imsize(1)/scale/5]), floor([bandwid/5 bandwid/5]));
 else
     density = zeros(2^10);
