@@ -1,4 +1,4 @@
-function positives = search_reads_cooccur(name, pos, distlim, searchname)
+function positives = search_reads_cooccur(name, pos, distlim, searchname, plotouterbox, col)
 % find where all reads occur together
 % Xiaoyan, 2017
 
@@ -49,20 +49,31 @@ while d <= distlim
      d = d + 5;
 end
 
-
+% visualization
 if ~isempty(positives)
     [~, unipos] = unique(positives(:,4:5), 'rows');
     positives = positives(unipos,:);
+    
+    if nargin <= 4
+        plotouterbox = 1;
+    end
+    
+    if nargin <= 5
+        col = 'y';
+    end
     
     % visualization
     boxsize = distlim*2;
     hold on;
     for i = 1:size(positives,1)
         plot([positives(i,1)-positives(i,3), positives(i,1)-positives(i,3), positives(i,1)+positives(i,3), positives(i,1)+positives(i,3), positives(i,1)-positives(i,3)],...
-            [positives(i,2)+positives(i,3), positives(i,2)-positives(i,3), positives(i,2)-positives(i,3), positives(i,2)+positives(i,3), positives(i,2)+positives(i,3)], 'y');
-        plot([positives(i,4)-boxsize, positives(i,4)-boxsize, positives(i,4)+boxsize, positives(i,4)+boxsize, positives(i,4)-boxsize],...
-            [positives(i,5)+boxsize, positives(i,5)-boxsize, positives(i,5)-boxsize, positives(i,5)+boxsize, positives(i,5)+boxsize],...
-            'w', 'linewidth', 2);
+            [positives(i,2)+positives(i,3), positives(i,2)-positives(i,3), positives(i,2)-positives(i,3), positives(i,2)+positives(i,3), positives(i,2)+positives(i,3)],...
+            'color', col);
+        if plotouterbox
+            plot([positives(i,4)-boxsize, positives(i,4)-boxsize, positives(i,4)+boxsize, positives(i,4)+boxsize, positives(i,4)-boxsize],...
+                [positives(i,5)+boxsize, positives(i,5)-boxsize, positives(i,5)-boxsize, positives(i,5)+boxsize, positives(i,5)+boxsize],...
+                'w', 'linewidth', 2);
+        end
     end
  else
     disp('No co-occurence of all reads within given distance.');
