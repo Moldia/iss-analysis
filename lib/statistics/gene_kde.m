@@ -18,10 +18,15 @@ idxNamePlot = find(strcmp(uNames, query));
 
 if ~isempty(idxNamePlot)
     posPlot = pos(idxName == idxNamePlot,:);
-    [~, density]=kde2d_modified...
-        (posPlot, 2^10, [0 0],...
-        floor([imsize(2)/scale/5, imsize(1)/scale/5]),...
-        floor([bandwidth/5, bandwidth/5]));
+    try
+        [~, density] = kde2d_modified...
+            (posPlot, 2^10, [0 0],...
+            floor([imsize(2)/scale/5, imsize(1)/scale/5]),...
+            floor([bandwidth/5, bandwidth/5]));
+    catch
+        density = zeros(2^10);
+        warning('Too few transcripts');
+    end
 else
     warning('No specified transcript detected in the input file');
     density = zeros(2^10);
