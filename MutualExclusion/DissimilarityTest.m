@@ -2,6 +2,7 @@
 % two-sample Kolmogorov-Smirnov test
 % Xiaoyan, 2017
 
+
 input_file = 'Decoding\QT_0.45_0_details.csv';
 % genes with read lower than this threshold will not be used in analysis
 count_threshold = 30; 
@@ -9,13 +10,14 @@ count_threshold = 30;
 bin_size = 200;
 
 
-[name, pos] = getinsitudata('Decoding\QT_0.45_0_details.csv');
-[uniName, ~, idxName] = unique(name);
-histName = hist(idxName, 1:max(idxName));
+%%
+[name, pos] = getinsitudata(input_file);
+[uNames, ~, idxName] = unique(name);
+cNames = hist(idxName, 1:max(idxName));
 
 % remove NNNN and any reads<count_threshold
-[name, pos] = removereads(name, [uniName(histName<count_threshold); {'NNNN'}], pos);
-[uniName, ~, idxName] = unique(name);
+[name, pos] = removereads(name, [uNames(cNames<count_threshold); {'NNNN'}], pos);
+[uNames, ~, idxName] = unique(name);
 
 % bin
 plot_all_onblack(input_file);
@@ -24,9 +26,9 @@ pos_bin = ceil(pos/bin_size);
 pos_bin = max(pos_bin(:,1))*(pos_bin(:,1)-1) + pos_bin(:,2);
 
 
-ksstat = zeros(length(uniName), 2);
-for i = 1:length(uniName)
-    for j = i:length(uniName)
+ksstat = zeros(length(uNames), 2);
+for i = 1:length(uNames)
+    for j = i:length(uNames)
         [~, p, ks2stat] = kstest2(pos_bin(idxName==i), pos_bin(idxName==j));
         ksstat(i,j,1) = ks2stat;
         ksstat(i,j,2) = p;
@@ -45,8 +47,8 @@ L = linkage(ksstat(:,:,2));
 order = dendroperm(L);
 
 figure; imagesc(ksstat(order,order,2)); grid on;
-set(gca, 'xtick', 1:length(uniName), 'xticklabel', uniName(order),...
-    'ytick', 1:length(uniName), 'yticklabel', uniName(order),...
+set(gca, 'xtick', 1:length(uNames), 'xticklabel', uNames(order),...
+    'ytick', 1:length(uNames), 'yticklabel', uNames(order),...
     'xticklabelrotation', 90);
 
 c = colorbar;
