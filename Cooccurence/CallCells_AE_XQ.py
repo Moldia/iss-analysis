@@ -2,12 +2,12 @@ import numpy as np
 from scipy import spatial
 import os
 
-input_file = r'G:\Salamander project\New\Cellprofiler\Transformed\QT_0.5_details_noNNNN_transformed_Ch035.csv'
+input_file = r'G:\Salamander project\New\Cellprofiler\Ch030\Decoding\QT_0.5_details_noNNNN.csv'
 output_folder = r'G:\Salamander project\New\Cellprofiler\Analysis'
-output_suffix = r'Ch035'
+output_suffix = r'Ch030'
 
 ## variables   ##
-radius = 100                                             # maximum radius analyzed from an target
+radius = 30                                             # maximum radius analyzed from an target
 cell_call_limit = 2                                      # number of self targets to call a cell type
 abort_limit = 1
 
@@ -35,12 +35,12 @@ uNames, idxName = np.unique(name, return_inverse=True)
 # pos = pos[np.in1d(idxName, idxUnwanted, invert=True),:]
 
 # or keep only the ones needed in neighbor search
-keepThese = housek + group2 + group6 + group7 + litgen
+keepThese = housek + litgen + group2 + group6 + group7
 idxKeep = [c for c, gene in enumerate(uNames) if gene in keepThese]
 name = name[np.in1d(idxName, idxKeep)]
 pos = pos[np.in1d(idxName, idxKeep), :]
 
-# unique names and name index
+# unique names and name index after subsetting
 uNames, idxName = np.unique(name, return_inverse=True)
 
 # catagorize genes
@@ -53,15 +53,19 @@ uNamesType = [np.where(np.array(genes)==gene)[0][0] for gene in uNames]
 uNamesType = np.array(geneTypes)[uNamesType]
 idxGroup = uNamesType[idxName]
 
-# build a KDTree to enable a fast neighbor search
+# build a KDTree to enable fast neighbor search
 tree = spatial.KDTree(pos)
+# find all neighbors within radius between including all reads
 neighbors = tree.query_ball_tree(tree, radius)
 AllCells = []
 with open(os.path.join(output_folder, 'CellTypeDetails_' + output_suffix + '.csv'), 'w') as f:
     f.write('CellTypeName,Members\n')
+
+    # use only reads from CellType X as query
     for i in range(2, 5):
         idxAllQueryInOneGroup = np.nonzero(idxGroup==i)[0]
         allFoundInOneGroup = []
+        querySpot = []
         for query in idxAllQueryInOneGroup:
             NN = np.array(neighbors[query])
             NNGroup = idxGroup[NN]
@@ -73,34 +77,36 @@ with open(os.path.join(output_folder, 'CellTypeDetails_' + output_suffix + '.csv
 
                 # sort based on distance
                 idx = np.argsort(NNDist)
-
-                # check if any "outsider" appears closer than an "insider"
                 NNSortedGroup = NNGroup[idx]
                 NNSorted = NN[idx]
 
-                # abort_limit-th closest outsider neighbor
+                # abort_limit-th closest outsider (invading outsider)
                 try:
                     invadingOutsider = \
                         np.nonzero(np.in1d(NNSortedGroup, np.setdiff1d(range(2,5), i)))[0][abort_limit-1]
                 except IndexError:      # no outsider within radius
                     invadingOutsider = len(NNSorted)
 
-                # number of insiders/fillers closer than the invading outsider
+                # number of insiders closer than the invading outsider
                 remainedInsiders = np.nonzero(NNSortedGroup[:invadingOutsider] == i)[0]
 
-                # continue only if more than cell_call_limit neighbors of same group appear before closest outsider
+                # continue only if more than cell_call_limit neighbors of same group appear before the invading outsider
                 if invadingOutsider+1 > cell_call_limit and remainedInsiders.size >= cell_call_limit:
                     # minimum group members (i.e. remove extra fillers farther away than cell_call_limit insiders)
                     minset = min(remainedInsiders[-1], invadingOutsider-1)
                     allFoundInOneGroup.append(tuple(np.append(np.sort(NNSorted[:minset+1]), NNDist[idx][minset])))
+                    querySpot.append(NNSorted[0])
 
-        # take unique combinations
-        allFoundInOneGroup = set(allFoundInOneGroup)
+        # take unique combinations (INCLUDING HOUSEKEEPING GENS!!!)
+        uAllFoundInOneGroup = set(allFoundInOneGroup)
+        idx = []
+        for group in list(uAllFoundInOneGroup):
+            idx.append(allFoundInOneGroup.index(group))
 
         # organize data and write details to file
-        CellsOfOneType = np.zeros((len(allFoundInOneGroup), 6+max(geneTypes)+1))
+        CellsOfOneType = np.zeros((len(uAllFoundInOneGroup), 6+max(geneTypes)+1))
         CellsOfOneType[:,0]= i
-        for c, group in enumerate(list(allFoundInOneGroup)):
+        for c, group in enumerate(list(uAllFoundInOneGroup)):
             members = list(group[:-1])
             f.write('%s' % typeNames[i])
             for member in members:
@@ -109,7 +115,7 @@ with open(os.path.join(output_folder, 'CellTypeDetails_' + output_suffix + '.csv
 
             members = [a.astype(int) for a in members]
             # query spot XY
-            CellsOfOneType[c,1:3] = pos[members[0],:]
+            CellsOfOneType[c,1:3] = pos[querySpot[idx[c]],:]
             # recalculated group centroid XY
             CellsOfOneType[c,3:5] = np.mean(pos[members,:], axis=0)
             # max distance
@@ -125,9 +131,10 @@ with open(os.path.join(output_folder, 'CellTypeDetails_' + output_suffix + '.csv
         AllCells.extend(CellsOfOneType)
 
 
-# write simplified result
+# write simplified results
 headerline = 'CellTypeName,QueryX,QueryY,CenterX,CenterY,MaxDistance'
 for celltype in typeNames:
     headerline = headerline + ',' + celltype
-np.savetxt(os.path.join(output_folder, 'CellType_' + output_suffix + '.csv'), AllCells, delimiter=',', fmt='%.2f', header=headerline)
+np.savetxt(os.path.join(output_folder, 'CellType_' + output_suffix + '.csv'),
+           AllCells, delimiter=',', fmt='%.2f', header=headerline)
 
