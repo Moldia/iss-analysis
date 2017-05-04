@@ -1,17 +1,17 @@
-function positives = search_reads_cooccur(name, pos, distlim, searchname, plotouterbox, col)
+function positives = search_reads_cooccur(name, pos, distlim,...
+    searchname, plotouterbox, col)
 % find where all reads occur together
 % Xiaoyan, 2017
 
-
-uniName = unique(name);
+uNames = unique(name);
 if nargin > 3
-    [name, pos] = removereads(name, setdiff(uniName, searchname), pos);
+    [name, pos] = removereads(name, setdiff(uNames, searchname), pos);
 end
 
 % use the least abundant one as query
-[uniName, ~, idxName] = unique(name);
-countName = hist(idxName, 1:length(uniName));
-[~, idxQ] = sort(countName, 'ascend');
+[uNames, ~, idxName] = unique(name);
+cName = hist(idxName, 1:length(uNames));
+[~, idxQ] = sort(cName, 'ascend');
 idxQ = idxQ(1);
 posquery = pos(idxName==idxQ,:);
 
@@ -25,18 +25,18 @@ dNN = reshape([dNN{:}], maxNN, [])';
 
 % step distance
 positives = [];
-d = 5;
+d = distlim/10;
 while d <= distlim
     tempidx = idxNN.*(double(dNN<=d));
     nameNN = tempidx;
     nameNN(nameNN~=0) = idxName(nameNN(nameNN~=0));
     nNN = sum(logical(nameNN),2);
-    nNNtemp = find(nNN>=length(uniName));
+    nNNtemp = find(nNN>=length(uNames));
     nameNN = nameNN(nNNtemp,:);
     positive = false(size(nameNN,1),1);
     for i = 1:size(nameNN,1)
         uniNN = unique(nameNN(i,:));
-        positive(i) = length(uniNN(uniNN~=0)) == length(uniName);
+        positive(i) = length(uniNN(uniNN~=0)) == length(uNames);
     end
     positive = nNNtemp(positive);
     
@@ -46,7 +46,7 @@ while d <= distlim
         centroid = mean(pos(groups,:),1);
         positives = [positives; centroid, d, posquery(positive(i),:)];
     end
-     d = d + 5;
+    d = d + distlim/10;
 end
 
 % visualization
