@@ -1,5 +1,7 @@
 function uPositives = search_reads_combs(name, pos, distlim,...
     mincomb, searchname, plotouterbox, col)
+% uPositives = search_reads_combs(name, pos, distlim,...
+%     mincomb, searchname, plotouterbox, col)
 % find where any at least mincomb of different reads occur together
 % Xiaoyan, 2017
 
@@ -28,7 +30,7 @@ if nargin <= 3
     mincomb = 2;
 end
 while d <= distlim
-    tempidx = idxNN.*(double(dNN>d-distlim/20 & dNN<=d));
+    tempidx = idxNN.*(double(dNN<=d));
     nameNN = tempidx;
     nameNN(nameNN~=0) = idxName(nameNN(nameNN~=0));
     nNN = sum(logical(nameNN), 2);

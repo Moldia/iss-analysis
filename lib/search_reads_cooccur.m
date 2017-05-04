@@ -1,5 +1,7 @@
 function positives = search_reads_cooccur(name, pos, distlim,...
     searchname, plotouterbox, col)
+% positives = search_reads_cooccur(name, pos, distlim,...
+%     searchname, plotouterbox, col)
 % find where all reads occur together
 % Xiaoyan, 2017
 
@@ -51,8 +53,28 @@ end
 
 % visualization
 if ~isempty(positives)
-    [~, unipos] = unique(positives(:,4:5), 'rows');
-    positives = positives(unipos,:);
+    % merge close clusters
+    idxNNcluster = rangesearch(positives(:,4:5), positives(:,4:5), distlim);
+    alreadyCounted = false(size(positives,1),1);
+    uPositives = [];
+    
+    for i = 1:numel(idxNNcluster)
+        idxCluster = idxNNcluster{i};
+        
+        % skip if the query has been processed
+        if alreadyCounted(idxCluster(1)); continue; end
+        
+        replicates = positives(idxCluster,:);
+        if size(replicates,1) > 1
+            [~, sortDist] = sort(replicates(:,3));
+            replicates = replicates(sortDist,:);
+        end
+        uPositives = [uPositives; replicates(1,:)];
+        alreadyCounted(idxNNcluster{i}) = true;
+    end
+    
+    [~, unipos] = unique(uPositives(:,4:5), 'rows');
+    positives = uPositives(unipos,:);
     
     if nargin <= 4
         plotouterbox = 1;
