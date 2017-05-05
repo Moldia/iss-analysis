@@ -1,9 +1,9 @@
-T = readtable('../../inSituSequencing/QT_0.35_0.0001_details_wCell.csv');
+T = readtable('SpotCoordinates_ROI.csv');
 
 TopDist = 60;
 BinSize = 1;
 
-name = T.name;
+name = T.Name;
 [uName] = unique(name);
 n = zeros(length(uName),1);
 n10 = n;
@@ -12,8 +12,8 @@ n20 = n;
 for i=1:length(uName)
     Gene = uName{i};
     MyDots = find(strcmp(Gene,name));
-    x = T.global_X_pos(MyDots);
-    y = T.global_Y_pos(MyDots);
+    x = T.posX(MyDots);
+    y = T.posY(MyDots);
     
     n(i) = length(MyDots);
     
