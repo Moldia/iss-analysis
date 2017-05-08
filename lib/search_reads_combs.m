@@ -23,39 +23,58 @@ idxNN = reshape([idxNN{:}], maxNN, [])';
 dNN = cellfun(@(v) [v, nan(1, maxNN-length(v))], dNN, 'uni', 0);
 dNN = reshape([dNN{:}], maxNN, [])';
 
-% step distance
-positives = [];
+positives = zeros(numel(name), 6);
 d = distlim/10;
 if nargin <= 3
     mincomb = 2;
 end
+
+% step distance
 while d <= distlim
-    tempidx = idxNN.*(double(dNN<=d));
+    tempidx = idxNN.*(double(dNN<=d));   
+    
+    % gene name index of neighbors
     nameNN = tempidx;
     nameNN(nameNN~=0) = idxName(nameNN(nameNN~=0));
-    nNN = sum(logical(nameNN), 2);
-    nNNtemp = find(nNN >= mincomb);
-    nameNN = nameNN(nNNtemp,:);
-    positive = false(size(nameNN,1), 1);
-    for i = 1:size(nameNN,1)
-        uNNs = unique(nameNN(i,:));
-        positive(i) = length(uNNs(uNNs~=0)) >= mincomb;
-    end
-    positive = nNNtemp(positive);
     
+    % need to have at least mincomb of neighbors
+    nNN = sum(logical(nameNN), 2);
+    query = find(nNN >= mincomb);
+    
+    % number of different gene neighbors
+    nNNGenes =  cellfun(@(v)...
+        length(unique(nameNN(v,:))) - double(ismember(0, nameNN(v,:))),...
+        num2cell(query));
+    positive = nNNGenes >= mincomb;
+    nNNGenes = nNNGenes(positive);
+    
+    % index of positive queries
+    positive = query(positive);    
+    
+    % remove queries that have already processed and have same number of
+    % different gene neighbors
+    idx = positives(positive,end)==nNNGenes;
+    nNNGenes(idx) = [];
+    positive(idx) = [];
+    
+    % add to potential pool
     for i = 1:length(positive)
         groups = tempidx(positive(i),:);
         groups(groups==0) = [];
-        centroid = mean(pos(groups,:),1);
-        positives = [positives;...
-            centroid, d, pos(positive(i),:), length(unique(idxName(groups)))];
+        centroid = mean(pos(groups,:), 1);
+        positives(positive(i),:) =...
+            [centroid, d, pos(positive(i),:), nNNGenes(i)];
     end
+    
     d = d + distlim/10;
 end
 
+% remove any query without neighbor
+positives(sum(positives, 2)==0,:) = [];
+
 if ~isempty(positives)
     % merge close clusters
-    idxNNcluster = rangesearch(positives(:,1:2), positives(:,1:2), distlim);
+    idxNNcluster = rangesearch(positives(:,1:2), positives(:,1:2), distlim*1.2);
     alreadyCounted = false(size(positives,1),1);
     uPositives = [];
     
@@ -65,16 +84,18 @@ if ~isempty(positives)
         % skip if the query has been processed
         if alreadyCounted(idxCluster(1)); continue; end
         
-        replicates = positives(idxCluster,:);
-        if size(replicates,1) > 1
-            [~, sortDist] = sort(replicates(:,3));
-            replicates = replicates(sortDist,:);
-            nReads = replicates(:,6);
+        duplicates = positives(idxCluster(~alreadyCounted(idxCluster)),:);
+        if size(duplicates,1) > 1
+            [~, sortDist] = sort(duplicates(:,3));
+            duplicates = duplicates(sortDist,:);
+            nReads = duplicates(:,6);
             [~, sortnReads] = sort(nReads, 'descend');
-            replicates = replicates(sortnReads,:);
+            duplicates = duplicates(sortnReads,:);
+            uPositives = [uPositives; mean(duplicates(:,1:2),1), duplicates(1,3:6)];
+        else
+            uPositives = [uPositives; duplicates(1,:)];
         end
-        uPositives = [uPositives; replicates(1,:)];
-        alreadyCounted(idxNNcluster{i}) = true;
+        alreadyCounted(idxCluster) = true;
     end
     
     % each query point takes only the cluster that has shortest distance
@@ -86,7 +107,7 @@ if ~isempty(positives)
     uPositives = uPositives(sortnReads,:);
     [~, idx] = unique(uPositives(:,4:5), 'rows');
     uPositives = uPositives(idx,:);
-    
+ 
     % visualization
     if nargin <= 5
         plotouterbox = 1;

@@ -10,6 +10,9 @@ if nargin > 3
     [name, pos] = removereads(name, setdiff(uNames, searchname), pos);
 end
 
+% return if no read left
+if isempty(name); positives =[]; return; end;
+
 % use the least abundant one as query
 [uNames, ~, idxName] = unique(name);
 cName = hist(idxName, 1:length(uNames));
