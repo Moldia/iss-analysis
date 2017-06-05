@@ -51,7 +51,7 @@ genes = list(set(genes))
 sections = []
 for gene in genes:
     print gene
-    dirname = "E:/PROOOJECTS/12_Neuron_mapping/Experiments/161229_V1ProbesRe/Allen/LowRes/" + gene
+    dirname = r"E:\PROOOJECTS\12_Neuron_mapping\Genes\AllenISH\LowRes/" + gene
     try:
         os.mkdir(dirname)
         # get coronal data set for the selected gene
