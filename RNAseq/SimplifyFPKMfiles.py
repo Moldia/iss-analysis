@@ -21,7 +21,7 @@ allgenes[allgenes.index("Lamp5")] = "6330527O06Rik"
 
 
 for s in range(25, 29):
-    for l in range(1):
+    for l in range(4):
         outfilename = os.path.join(r"E:\RNAseq\170825_NB501365_0108_AHJ2HNBGX3\GappedMapping_GRCm38\fpkm_cufflinks",
                                    "S" + str(s) + "_L00" + str(l+1),
                                    "fpkm_sipmle.tsv")
@@ -41,7 +41,7 @@ for s in range(25, 29):
 
 # isoforms file
 for s in range(25, 29):
-    for l in range(1):
+    for l in range(4):
         outfilename = os.path.join(r"E:\RNAseq\170825_NB501365_0108_AHJ2HNBGX3\GappedMapping_GRCm38\fpkm_cufflinks",
                                    "S" + str(s) + "_L00" + str(l+1),
                                    "isoforms.fpkm_sipmle.tsv")
