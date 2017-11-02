@@ -11,7 +11,7 @@ output_fileprefix = 'pooled_bincounts';
 %%
 % which files to pool
 fid = fopen(batch_input_file, 'r');
-files = textscan(fid, '%s\n');
+files = textscan(fid, '%s');
 files = files{:};
 fclose(fid);
 
@@ -53,6 +53,7 @@ matCounts = zeros(length(rNames), numel(allNames));
 nrow = 0;
 for i = 1:numel(files)
     matCounts(nrow+1:nrow+size(binPos{i}),mapNames{i}) = binCounts{i};
+    nrow = nrow + size(binPos{i});
 end
 [sortedNames, orderNames] = sort(allNames);
 matCounts = matCounts(:,orderNames);
@@ -66,7 +67,8 @@ fprintf(fid, ['%s,' lineformat('%d', numel(sortedNames))], binCountsWrite{:});
 fclose(fid);
 
 % write hexbin position file
-binPosWrite = [rNames, num2cell(binPos{:}(:,2:3))]';
+binPos = cat(1, binPos{:});
+binPosWrite = [rNames, num2cell(binPos(:,2:3))]';
 fid = fopen([output_fileprefix, '_binpos.csv'], 'w');
 fprintf(fid, 'file_bin,bincenter_x,bincenter_y\n');
 fprintf(fid, '%s,%d,%d\n', binPosWrite{:});
