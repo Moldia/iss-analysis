@@ -9,8 +9,8 @@ dy = 3/2 * radius;
 dx = sqrt(3) * radius;
 
 % number of bins
-nx = ceil(range(pos(:,1))/dx);
-ny = ceil(range(pos(:,2))/dy);
+nx = ceil(range(pos(:,1))/dx + .5);
+ny = ceil(range(pos(:,2))/dy + .5);
 
 % check if radius is too big
 assert(nx>1, 'Hexbin radius is too big relative to spot x coordinates');
@@ -39,7 +39,7 @@ cy = centers(:,2);
 
 
 %% bin counts
-inbin = zeros(length(cx),1);
+inbin = zeros(size(pos,1),1);
 counted = false(size(pos,1),1);
 
 % count spots within a hexagon
@@ -53,3 +53,4 @@ end
 % remove empty bins
 bincenters = centers(unique(inbin),:);
 
+end
