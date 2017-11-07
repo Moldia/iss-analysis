@@ -58,7 +58,7 @@ end
 [sortedNames, orderNames] = sort(allNames);
 matCounts = matCounts(:,orderNames);
 
-% write count file and 
+% write count file 
 binCountsWrite = [rNames, num2cell(matCounts)]';
 fid = fopen([output_fileprefix, '_count.csv'], 'w');
 fprintf(fid, 'file_bin,');

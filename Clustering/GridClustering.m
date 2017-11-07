@@ -1,133 +1,161 @@
-%% unsupervised clustering (kmeans) of spatial data
-%  transcript counts in every grid is normalized by the maximum counts
-%  Xiaoyan, 2015-8-5
+% unsupervised clustering (kmeans) of spatial data
+% transcript counts in every grid is normalized by the maximum counts
+% Xiaoyan, 2017
 
-%% parameters
+%% input
 grid_size = 400;
-background_image = 'input_example\IHC_mergedRGB_20%.tif';
+decoded_file = 'E:\PROOOJECTS\Sides\Jessica_Subtyping\QT_0.35_0.0001_details_900196_1.csv';
+num_clusters = 3;
+output_directory = 'E:\PROOOJECTS\Sides\Jessica_Subtyping';
+
+background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
-image = imread(background_image);
-decoded_file = 'input_example\QT_0.4_0.001_details.csv';
-num_clusters = 2;
 
-%% transcripts
-tic
-disp('Start processing..');
-[name,Pos] = getinsitudata_f(decoded_file,2,1,0);
-[name_uni,~,idx_re] = unique(name);
+%% 
+% transcripts
+[name, pos] = getinsitudata(decoded_file);
+[name, pos] = removereads(name, 'NNNN', pos);
+[uNames, ~, iName] = unique(name);
 
-% remove NNNN
-idx_NNNN = strcmp(name_uni,'NNNN');
-if nnz(idx_NNNN)==0
-    warning('Check variable name_uni.');
-end
-Pos = Pos(idx_re~=find(idx_NNNN),:);
-idx_re = idx_re(idx_re~=find(idx_NNNN));
-
-%% count reads in grid
-grid_nrx =  ceil(max(Pos(:,1))/grid_size);
-grid_nry =  ceil(max(Pos(:,2))/grid_size);
-grid_nr = grid_nrx*grid_nry;
+% count reads in grid
+nx =  ceil(max(pos(:,1))/grid_size);
+ny =  ceil(max(pos(:,2))/grid_size);
+nGrids = nx*ny;
 
 % scaling
-Pos_pixel = round(correctcoordinates_f(Pos,1/grid_size));
+posGrid = round(correctcoord(pos, 1/grid_size));
 
-blobinpolygon = cell(1,grid_nr);
-Counted = false(length(Pos),1);
-
-for j = 1:grid_nrx   % j along x axis, column
-    fprintf('%.2f%s\n',double((j-1)/grid_nrx)*100,'% grid processed.');
+% count reads in each grid
+blobinpolygon = cell(1,nGrids);
+Counted = false(length(pos), 1);
+for j = 1:nx   % j along x axis, column
+    fprintf('%.2f%s\n', double((j-1)/nx)*100, '% grid processed.');
     
-    for i = 1:grid_nry  % i along y axis, row
-        temp_in = Pos_pixel(:,1)==j & Pos_pixel(:,2)==i;
-        temp_in = temp_in & ~Counted;
+    for i = 1:ny  % i along y axis, row
+        ingrid = posGrid(:,1)==j & posGrid(:,2)==i;
+        ingrid = ingrid & ~Counted;
             
         % blobs within grid (logical)
-        k = (j-1)*grid_nry+i; % counting direction: y
-        blobinpolygon(k) = {temp_in};
+        k = (j-1)*ny+i; % counting direction: y
+        blobinpolygon(k) = {ingrid};
         
         % already counted blobs
-        Counted = Counted | temp_in;
+        Counted = Counted | ingrid;
 
     end
 end
 disp('100.00% grid processed.');
 
-%% record grid positions
-polygoncoord = zeros(5,2,grid_nr);
-grid_size = ceil(grid_size*scale);
-for j = 1:grid_nrx   % j along x axis, column
-    gridxmin = (j-1)*grid_size;
-    gridxmax = j*grid_size;
+% record grid positions
+cx = (meshgrid(1:nx, 1:ny)-1)*grid_size + grid_size/2;
+cy = (meshgrid(1:ny, 1:nx)'-1)*grid_size + grid_size/2;
+cPolygons = sortrows([cx(:), cy(:)]);
+
+coordPolygons = zeros(5, 2, nGrids);
+szGrid = ceil(grid_size*scale);
+for j = 1:nx   % j along x axis, column
+    gridxmin = (j-1)*szGrid;
+    gridxmax = j*szGrid;
     
-    for i = 1:grid_nry  % i along y axis, row
-        gridymin = (i-1)*grid_size;
-        gridymax = i*grid_size;
+    for i = 1:ny  % i along y axis, row
+        gridymin = (i-1)*szGrid;
+        gridymax = i*szGrid;
         
-        k = (j-1)*grid_nry+i; % counting direction: y
+        k = (j-1)*ny+i; % counting direction: y
         
         polyx = [gridxmin,gridxmin,gridxmax,gridxmax,gridxmin];
         polyy = [gridymin,gridymax,gridymax,gridymin,gridymin];
-        polygoncoord(:,:,k) = [polyx',polyy'];
+        coordPolygons(:,:,k) = [polyx',polyy'];
     end
 end
 clear gridxmin gridxmax gridymin gridymax polyx polyy
 
-%% transcripts excluding NNNN
-count_transcript = zeros(length(name_uni(~idx_NNNN)),grid_nr);
-list = 1:length(name_uni);
-% tic
-for i = 1:grid_nr
-    count_transcript(:,i) = (hist(idx_re(logical(blobinpolygon{i})),list(~idx_NNNN)))';
+% gene counts
+cGenes = zeros(length(uNames), nGrids);
+for i = 1:nGrids
+    cGenes(:,i) = (hist(iName(logical(blobinpolygon{i})), 1:numel(uNames)))';
 end
-% toc
 
-emptygrid = sum(count_transcript,1)==0;
-count_transcript_nozero = count_transcript(:,~emptygrid);
-count_transcript_norm = count_transcript_nozero./repmat(max(count_transcript_nozero,[],2),1,size(count_transcript_nozero,2));
-% count_transcript_norm = count_transcript_nozero./repmat(sum(count_transcript_nozero,1),size(count_transcript_nozero,1),1);
+emptygrid = sum(cGenes,1)==0;
+nonEmptyGrids = find(~emptygrid);
+cGenes_nonzero = cGenes(:,~emptygrid);
 
-%% figure
-% figure;
-% bh = bar3(count_transcript_norm);
-% for i = 1:length(bh)
-%     temp = get(bh(i),'ZData');
-%     set(bh(i),'CData',temp);
-% end
-% 
-% L = linkage(count_transcript_norm','average');
-% set(0,'RecursionLimit',1000);
-% figure; dendrogram(L)
-% 
-%% kmeans
+% normalized by max
+cGenes_maxnorm = bsxfun(@rdivide, cGenes_nonzero, max(cGenes_nonzero,[],2));
+
+% normalization by sum
+cGenes_sumnorm = bsxfun(@rdivide, cGenes_nonzero, sum(cGenes_nonzero,1));
+
+% kmeans
 disp('Start kmeans clustering with 100 replicates.');
-[cidx,ctrs] = kmeans(count_transcript_norm',num_clusters,'Distance','sqeuclidean','Replicates',10);
-toc
+[iCluster, centroid] = kmeans(cGenes_maxnorm', num_clusters,...
+    'Distance', 'sqeuclidean', 'Replicates', 100);
 
-list = 1:grid_nr;
+% write files
+cNames = {'grid_num', uNames{:}, 'center_x', 'center_y'};
 
-figure; 
-imshow(image);
-% axis image;
-hold on;
+fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount.csv'), 'w');
+fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
+towrite = num2cell([nonEmptyGrids; cGenes_nonzero; cPolygons(nonEmptyGrids,:)']);
+fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
+fclose(fid);
+
+fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_SumNorm.csv'), 'w');
+fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
+towrite = num2cell([nonEmptyGrids; cGenes_sumnorm; cPolygons(nonEmptyGrids,:)']);
+fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
+fclose(fid);
+
+cNames = {'grid_num', uNames{:}, 'center_x', 'center_y', 'cluseter_id'};
+fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_MaxNorm.csv'), 'w');
+fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
+towrite = num2cell([nonEmptyGrids; cGenes_maxnorm; cPolygons(nonEmptyGrids,:)'; iCluster']);
+fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
+fclose(fid);
+
+% visualization
+figure; hold on;
+try
+    image = imread(background_image);
+    imshow(image);
+catch
+    axis image
+    set(gca, 'YDir', 'reverse');
+end
 col = {'red' 'green' 'blue' 'yellow' 'cyan'};
-for k = 1:max(cidx)
-    listtemp = list(~emptygrid);
-    listtemp = listtemp(cidx==k);
-    for i = 1:length(listtemp)
-        temppoly = polygoncoord(:,:,listtemp(i));
-        fill(temppoly(:,1),temppoly(:,2),col{k},'facealpha',0.3);
+for k = 1:max(iCluster)
+    grids = nonEmptyGrids(iCluster==k);
+    for i = 1:length(grids)
+        temppoly = coordPolygons(:,:,grids(i));
+        fill(temppoly(:,1), temppoly(:,2), col{k}, 'facealpha', 0.3);
     end
 end
 drawnow;
 
+% heatmap of normalized counts and barplot of cluster centroid position
 figure;
-bh = bar(ctrs');
-set(gca,'XTick',1:length(name_uni(~idx_NNNN)),'XTIckLabel',name_uni(~idx_NNNN),...
-    'XLim',[0 length(name_uni(~idx_NNNN))+1],'XTickLabelRotation',90);
+ax1 = subplot(121);
+[~, idxSort] = sort(iCluster);
+[~, idxFirst] = unique(iCluster(idxSort));
+imagesc(cGenes_maxnorm(:,idxSort));
+hold on;
+plot(repmat(idxFirst', 2, 1), repmat([0; numel(uNames)+1], 1, numel(idxFirst)),...
+    'r', 'linewidth', 2);
+xlabel('bin');
+set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames, 'fontsize', 4);
+title('normailzed bin count data')
+colorbar
+
+ax2 = subplot(122);
+bh = barh(centroid');
+set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames,...
+    'ylim',[0 numel(uNames)+1], 'fontsize', 5, 'ydir', 'reverse');
 for i = 1:length(bh)
-    set(bh(i),'facecolor',rgb(col{i}),'edgecolor',[.2 .2 .2],'linewidth',0.1);
+    set(bh(i), 'facecolor', rgb(col{i}), 'edgecolor', [.2 .2 .2], 'linewidth', .1);
 end
 box off
-title('centroid locations of clusters')
-legend(gca,'show')
+xlabel('normalized gene count')
+title('centroid location of clusters')
+legend(catstrnum('Cluster ', 1:max(iCluster)))
+
+linkaxes([ax1, ax2], 'y');
