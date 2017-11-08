@@ -1,4 +1,5 @@
 function cbvalues = checkboxes(names)
+% cbvalues = checkboxes(names)
 % create checkboxes and get user selection
 % Xiaoyan, 2017
 

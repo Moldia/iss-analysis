@@ -1,5 +1,5 @@
 function [inbin, bincenters, vx, vy] = hexbin(pos, radius)
-% [inbin, bincenters] = hexbin(pos, radius)
+% [inbin, bincenters, vx, vy] = hexbin(pos, radius)
 % hexagonal binning
 % Xiaoyan, 2017
 
