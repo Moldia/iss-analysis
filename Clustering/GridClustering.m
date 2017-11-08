@@ -4,9 +4,9 @@
 
 %% input
 grid_size = 400;
-decoded_file = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica\QT_0.35_0.0001_details_900196_1.csv';
+decoded_file = 'QT_0.35_0.0001_details_900196_1.csv';
 num_clusters = 3;
-output_directory = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica';
+output_directory = '';
 
 background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
@@ -80,23 +80,44 @@ emptygrid = sum(cGenes,1)==0;
 nonEmptyGrids = find(~emptygrid);
 cGenes_nonzero = cGenes(:,~emptygrid);
 
+% write files (all data)
+cNames = {'grid_num', uNames{:}, 'center_x', 'center_y'};
+
+fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_all.csv'), 'w');
+fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
+towrite = num2cell([nonEmptyGrids; cGenes_nonzero; cPolygons(nonEmptyGrids,:)']);
+fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
+fclose(fid);
+
+% select genes for clustering
+cbValues = checkboxes(uNames);
+idx = cellfun(@(v) find(strcmp(v, uNames)), cbValues(:,1));
+isSelected = false(numel(idx), 1);
+isSelected(idx) = cell2mat(cbValues(:,2));
+
+cGenes_selected = cGenes_nonzero(isSelected,:);
+emptygrid = sum(cGenes_selected,1)==0;
+nonEmptyGrids = nonEmptyGrids(~emptygrid);
+cGenes_selected = cGenes_selected(:,~emptygrid);
+
 % normalized by max
-cGenes_maxnorm = bsxfun(@rdivide, cGenes_nonzero, max(cGenes_nonzero,[],2));
+cGenes_maxnorm = bsxfun(@rdivide, cGenes_selected, max(cGenes_selected,[],2));
 
 % normalization by sum
-cGenes_sumnorm = bsxfun(@rdivide, cGenes_nonzero, sum(cGenes_nonzero,1));
+cGenes_sumnorm = bsxfun(@rdivide, cGenes_selected, sum(cGenes_selected,1));
+
 
 % kmeans
 disp('Starting kmeans clustering with 100 replicates..');
 [iCluster, centroid] = kmeans(cGenes_maxnorm', num_clusters,...
     'Distance', 'sqeuclidean', 'Replicates', 100);
 
-% write files
-cNames = {'grid_num', uNames{:}, 'center_x', 'center_y'};
+% write files (only selected)
+cNames = {'grid_num', uNames{isSelected}, 'center_x', 'center_y'};
 
 fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount.csv'), 'w');
 fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
-towrite = num2cell([nonEmptyGrids; cGenes_nonzero; cPolygons(nonEmptyGrids,:)']);
+towrite = num2cell([nonEmptyGrids; cGenes_selected; cPolygons(nonEmptyGrids,:)']);
 fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
@@ -106,7 +127,7 @@ towrite = num2cell([nonEmptyGrids; cGenes_sumnorm; cPolygons(nonEmptyGrids,:)'])
 fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
-cNames = {'grid_num', uNames{:}, 'center_x', 'center_y', 'cluseter_id'};
+cNames = {'grid_num', uNames{isSelected}, 'center_x', 'center_y', 'cluseter_id'};
 fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_MaxNorm.csv'), 'w');
 fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
 towrite = num2cell([nonEmptyGrids; cGenes_maxnorm; cPolygons(nonEmptyGrids,:)'; iCluster']);
@@ -140,17 +161,17 @@ ax1 = subplot(121);
 [~, idxFirst] = unique(iCluster(idxSort));
 imagesc(cGenes_maxnorm(:,idxSort));
 hold on;
-plot(repmat(idxFirst', 2, 1), repmat([0; numel(uNames)+1], 1, numel(idxFirst)),...
+plot(repmat(idxFirst', 2, 1), repmat([0; nnz(isSelected)+1], 1, numel(idxFirst)),...
     'r', 'linewidth', 2);
 xlabel('bin');
-set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames, 'fontsize', 5);
+set(gca, 'ytick', 1:nnz(isSelected), 'yticklabel', uNames(isSelected), 'fontsize', 5);
 title('normailzed bin count data')
 colorbar
 
 ax2 = subplot(122);
 bh = barh(centroid');
-set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames,...
-    'ylim',[0 numel(uNames)+1], 'fontsize', 5, 'ydir', 'reverse');
+set(gca, 'ytick', 1:nnz(isSelected), 'yticklabel', uNames(isSelected),...
+    'ylim',[0 nnz(isSelected)+1], 'fontsize', 5, 'ydir', 'reverse');
 for i = 1:length(bh)
     set(bh(i), 'facecolor', rgb(col{i}), 'edgecolor', [.2 .2 .2], 'linewidth', .1);
 end
