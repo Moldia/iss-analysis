@@ -4,9 +4,9 @@
 
 %% input
 grid_size = 400;
-decoded_file = 'E:\PROOOJECTS\Sides\Jessica_Subtyping\QT_0.35_0.0001_details_900196_1.csv';
+decoded_file = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica\QT_0.35_0.0001_details_900196_1.csv';
 num_clusters = 3;
-output_directory = 'E:\PROOOJECTS\Sides\Jessica_Subtyping';
+output_directory = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica';
 
 background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
@@ -87,7 +87,7 @@ cGenes_maxnorm = bsxfun(@rdivide, cGenes_nonzero, max(cGenes_nonzero,[],2));
 cGenes_sumnorm = bsxfun(@rdivide, cGenes_nonzero, sum(cGenes_nonzero,1));
 
 % kmeans
-disp('Start kmeans clustering with 100 replicates.');
+disp('Starting kmeans clustering with 100 replicates..');
 [iCluster, centroid] = kmeans(cGenes_maxnorm', num_clusters,...
     'Distance', 'sqeuclidean', 'Replicates', 100);
 
@@ -142,7 +142,7 @@ hold on;
 plot(repmat(idxFirst', 2, 1), repmat([0; numel(uNames)+1], 1, numel(idxFirst)),...
     'r', 'linewidth', 2);
 xlabel('bin');
-set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames, 'fontsize', 4);
+set(gca, 'ytick', 1:numel(uNames), 'yticklabel', uNames, 'fontsize', 5);
 title('normailzed bin count data')
 colorbar
 
