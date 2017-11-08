@@ -3,10 +3,10 @@
 % Xiaoyan, 2017
 
 %% input
-grid_size = 400;
-decoded_file = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica\QT_0.35_0.0001_details_900196_1.csv';
+hexagon_radius = 400;
+decoded_file = 'QT_0.35_0.0001_details_900196_1.csv';
 num_clusters = 3;
-output_directory = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica';
+output_directory = '';
 
 background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
@@ -17,68 +17,15 @@ scale = 0.2;    % image scale
 [name, pos] = removereads(name, 'NNNN', pos);
 [uNames, ~, iName] = unique(name);
 
-% count reads in grid
-nx =  ceil(max(pos(:,1))/grid_size);
-ny =  ceil(max(pos(:,2))/grid_size);
-nGrids = nx*ny;
-
-% scaling
-posGrid = round(correctcoord(pos, 1/grid_size));
-
-% count reads in each grid
-blobinpolygon = cell(1,nGrids);
-Counted = false(length(pos), 1);
-for j = 1:nx   % j along x axis, column
-    fprintf('%.2f%s\n', double((j-1)/nx)*100, '% grid processed.');
-    
-    for i = 1:ny  % i along y axis, row
-        ingrid = posGrid(:,1)==j & posGrid(:,2)==i;
-        ingrid = ingrid & ~Counted;
-            
-        % blobs within grid (logical)
-        k = (j-1)*ny+i; % counting direction: y
-        blobinpolygon(k) = {ingrid};
-        
-        % already counted blobs
-        Counted = Counted | ingrid;
-
-    end
-end
-disp('100.00% grid processed.');
-
-% record grid positions
-cx = (meshgrid(1:nx, 1:ny)-1)*grid_size + grid_size/2;
-cy = (meshgrid(1:ny, 1:nx)'-1)*grid_size + grid_size/2;
-cPolygons = sortrows([cx(:), cy(:)]);
-
-coordPolygons = zeros(5, 2, nGrids);
-szGrid = ceil(grid_size*scale);
-for j = 1:nx   % j along x axis, column
-    gridxmin = (j-1)*szGrid;
-    gridxmax = j*szGrid;
-    
-    for i = 1:ny  % i along y axis, row
-        gridymin = (i-1)*szGrid;
-        gridymax = i*szGrid;
-        
-        k = (j-1)*ny+i; % counting direction: y
-        
-        polyx = [gridxmin,gridxmin,gridxmax,gridxmax,gridxmin];
-        polyy = [gridymin,gridymax,gridymax,gridymin,gridymin];
-        coordPolygons(:,:,k) = [polyx',polyy'];
-    end
-end
-clear gridxmin gridxmax gridymin gridymax polyx polyy
+% reads in hexagon
+[inbin, bincenters, vx, vy] = hexbin(pos, hexagon_radius);
+nonEmptyGrids = unique(inbin);
 
 % gene counts
-cGenes = zeros(length(uNames), nGrids);
-for i = 1:nGrids
-    cGenes(:,i) = (hist(iName(logical(blobinpolygon{i})), 1:numel(uNames)))';
+cGenes_nonzero = zeros(length(uNames), size(bincenters,1));
+for i = 1:numel(nonEmptyGrids)
+    cGenes_nonzero(:,i) = (hist(iName(inbin==nonEmptyGrids(i)), 1:numel(uNames)))';
 end
-
-emptygrid = sum(cGenes,1)==0;
-nonEmptyGrids = find(~emptygrid);
-cGenes_nonzero = cGenes(:,~emptygrid);
 
 % normalized by max
 cGenes_maxnorm = bsxfun(@rdivide, cGenes_nonzero, max(cGenes_nonzero,[],2));
@@ -96,20 +43,20 @@ cNames = {'grid_num', uNames{:}, 'center_x', 'center_y'};
 
 fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount.csv'), 'w');
 fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
-towrite = num2cell([nonEmptyGrids; cGenes_nonzero; cPolygons(nonEmptyGrids,:)']);
+towrite = num2cell([nonEmptyGrids, cGenes_nonzero', bincenters]');
 fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
 fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_SumNorm.csv'), 'w');
 fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
-towrite = num2cell([nonEmptyGrids; cGenes_sumnorm; cPolygons(nonEmptyGrids,:)']);
+towrite = num2cell([nonEmptyGrids, cGenes_sumnorm', bincenters]');
 fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
 cNames = {'grid_num', uNames{:}, 'center_x', 'center_y', 'cluseter_id'};
 fid = fopen(fullfile(output_directory, 'GridClustering_GeneCount_MaxNorm.csv'), 'w');
 fprintf(fid, lineformat('%s', numel(cNames)), cNames{:});
-towrite = num2cell([nonEmptyGrids; cGenes_maxnorm; cPolygons(nonEmptyGrids,:)'; iCluster']);
+towrite = num2cell([nonEmptyGrids, cGenes_maxnorm', bincenters, iCluster]');
 fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
@@ -125,10 +72,9 @@ end
 col = {'red' 'green' 'blue' 'yellow' 'cyan'};
 hold on;
 for k = 1:max(iCluster)
-    grids = nonEmptyGrids(iCluster==k);
-    for i = 1:length(grids)
-        temppoly = coordPolygons(:,:,grids(i));
-        fill(temppoly(:,1), temppoly(:,2), col{k}, 'facealpha', 0.3);
+    bins = find(iCluster==k);
+    for i = 1:length(bins)
+        fill(vx(:,bins(i))*scale, vy(:,bins(i))*scale, col{k}, 'facealpha', 0.3);
     end
 end
 drawnow;

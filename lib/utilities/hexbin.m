@@ -1,4 +1,4 @@
-function [inbin, bincenters] = hexbin(pos, radius)
+function [inbin, bincenters, vx, vy] = hexbin(pos, radius)
 % [inbin, bincenters] = hexbin(pos, radius)
 % hexagonal binning
 % Xiaoyan, 2017
@@ -52,5 +52,7 @@ end
 
 % remove empty bins
 bincenters = centers(unique(inbin),:);
+vx = vx(:,unique(inbin));
+vy = vy(:,unique(inbin));
 
 end

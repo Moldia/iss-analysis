@@ -57,14 +57,14 @@ hold on;
 plot(repmat(idxFirst', 2, 1), repmat([0; nnz(isSelected)+1], 1, numel(idxFirst)),...
     'r', 'linewidth', 2);
 xlabel('bin');
-set(gca, 'ytick', 1:nnz(isSelected), 'yticklabel', cNames(isSelected), 'fontsize', 4);
+set(gca, 'ytick', 1:nnz(isSelected), 'yticklabel', cNames(isSelected), 'fontsize', 5);
 title('normailzed bin count data')
 colorbar
 
 ax2 = subplot(122);
 bh = barh(centroid');
 set(gca, 'ytick', 1:nnz(isSelected), 'yticklabel', cNames(isSelected),...
-    'ylim',[0 nnz(isSelected)+1], 'fontsize', 4, 'ydir', 'reverse');
+    'ylim',[0 nnz(isSelected)+1], 'fontsize', 5, 'ydir', 'reverse');
 box off
 xlabel('normalized gene count')
 title('centroid location of clusters')
