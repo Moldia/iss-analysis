@@ -82,6 +82,8 @@ fprintf(fid, lineformat('%d', numel(cNames)), towrite{:});
 fclose(fid);
 
 % visualization
+vx = vx(:,~emptygrid);
+vy = vy(:,~emptygrid);
 figure; 
 try
     image = imread(background_image);
