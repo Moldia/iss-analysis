@@ -2,9 +2,9 @@
 % Xiaoyan, 2017
 
 %% input
-hexbin_cluster_file = 'Jessica\HexbinClustering_GeneCount_MaxNorm.csv';    % last three columns: x pos, y pos, cluster id
+hexbin_cluster_file = 'HexbinClustering_GeneCount_MaxNorm.csv';    % last three columns: x pos, y pos, cluster id
 hexagon_radius = 300;
-output_directory = 'C:\Users\qxyyx\OneDrive\worktemp\Jessica';
+output_directory = '';
 min_cluster_member = 8;     % minimum number of bins in a connected spatial patch
 
 background_image = '';    % can be empty if not needed for visualization

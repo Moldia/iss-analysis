@@ -10,8 +10,8 @@ dx = sqrt(3) * radius;
 
 
 % number of grids in X and Y direction
-nX = floor(range(xypos(:,1))/dx) + 1;
-nY = floor(range(xypos(:,2))/dy) + 1;
+nX = floor(round(range(xypos(:,1))/dx)) + 1;
+nY = floor(round(range(xypos(:,2))/dy)) + 1;
 
 assert(nX&nY, 'number of hexbins cannot be zero in any  direction');
 
