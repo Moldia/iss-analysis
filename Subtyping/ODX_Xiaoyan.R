@@ -102,7 +102,7 @@ paikfunction <- function(mat, group) {
 }
 
 # Load in paik annotation object and clean
-load("C:/Worky/Projects/Subtyping/paik110504.RData")
+load("E:/GitLocal/iss-analysis/Subtyping/paik110504.RData")
 tf1 = duplicated(paik$symbol) 
 paik.clean = paik[!tf1,] # remove duplicates
 paik.clean = paik.clean[,1:4] # remove superfluous information

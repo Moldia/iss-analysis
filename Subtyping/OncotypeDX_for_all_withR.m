@@ -1,42 +1,43 @@
 %% files to read
-samples = ls;
-samples = cellstr(samples(3:14,:));
+samples = ls();
+files = cellstr(files(3:end,:));
+% files = {'C:\Users\Xiaoyan\Downloads\QT_0.35_0.004_details.csv'};
 windowsize = 1000:1000:10000;
 
 %% read and import
 Genes = {'ACTB','GAPDH','RPLP0','GUS1','TFRC','Ki-67','STK15','BIRC5','CCNB1','MYBL2','MMP11','CTSL2','GRB7','HER2','ER','PR','BCL2','SCUBE2','GSTM1','CD68','BAG1'};
-All = cell(length(samples),3);
-CountsAll = cell(length(samples),length(windowsize));
-Polygon = cell(length(samples),length(windowsize));
+All = cell(length(files),3);
+CountsAll = cell(length(files),length(windowsize));
+Polygon = cell(length(files),length(windowsize));
 
-for i = 1:length(samples)
-    decodedir = strcat(samples{i});
-    decodefile = strcat(decodedir, '\QT_0.4_0.005_details.csv');
-    [name,pos,~] = getinsitudata_f(decodefile);
+for i = 1:length(files)
+    decodedir = strcat(files{i});
+    decodefile = strcat(decodedir, '\QT_0.35_0.004_details.csv');
+    [name, pos] = getinsitudata(files{i});
 
     % take only ODX genes
     pos = pos(ismember(name,Genes),:);
     name = name(ismember(name,Genes));
     
     % reorder based on the origianl gene list
-    [name_uni,~,idx_name] = unique(name);
-    idx_list = cellfun(@(v) strcmp(v,Genes), name_uni, 'uni', 0);
+    [uNames, ~, iName] = unique(name);
+    idx_list = cellfun(@(v) strcmp(v,Genes), uNames, 'uni', 0);
     idx_list = cellfun(@find, idx_list, 'uni', 0);
     idx_list = cellfun(@(v) [v, zeros(1,1-length(v))], idx_list);
    
     % bin reads
     for j = 1:length(windowsize)
-        binned = binreads_f(pos, windowsize(j));
-        counttemp = double(binned).*repmat(idx_name,1,size(binned,2));
+        binned = binreads(pos, windowsize(j));
+        counttemp = double(binned).*repmat(iName,1,size(binned,2));
         
         count = zeros(21,size(binned,2));
-        counttemp = hist(counttemp,0:length(name_uni));
+        counttemp = hist(counttemp,0:length(uNames));
         counttemp = counttemp(2:end,:);
         count(idx_list(idx_list~=0),:) = counttemp;
         
         CountsAll{i,j} = count;
 
-        polycoord = polygonposition_f(pos, windowsize(j), 0.2);
+        polycoord = polygonposition(pos, windowsize(j), 0.2);
         Polygon{i,j} = polycoord;
     end
         
@@ -49,9 +50,9 @@ for i = 1:length(windowsize)
  
     countsum = [];
     header = [];
-    for j = 1:length(samples)
+    for j = 1:length(files)
         header = [header,...
-            strcat(repmat(samples(j),1,size(CountsAll{j,i},2)), '_',...
+            strcat(repmat(strrep(files(j), '\','/'), 1, size(CountsAll{j,i},2)), '_',...
             cellfun(@(v) num2str(v), num2cell(1:size(CountsAll{j,i},2)),'uni',0))];
         countsum = [countsum, CountsAll{j,i}];
     end
@@ -81,13 +82,13 @@ mkdir(outdir)
 for i = length(windowsize):-1:1
     infile = [dir '/' 'windowsize_' num2str(windowsize(i)) '.csv'];
     outfile = [outdir, '/', 'windowsize_' num2str(windowsize(i)), '_ODX.xlsx'];
-    rcommand = ['Rscript --vanilla C:/Worky/Projects/Subtyping/ODX_Xiaoyan.R ',...
+    rcommand = ['Rscript --vanilla E:/GitLocal/iss-analysis/Subtyping/ODX_Xiaoyan.R ',...
         infile ' ' outfile];
     system(rcommand);
 end
     
 %% read ODX classification from R output files
-RiskGroup = cell(length(samples),length(windowsize));
+RiskGroup = cell(length(files),length(windowsize));
 
 for i = 2:length(windowsize)   
     outfile = [outdir, '/', 'windowsize_' num2str(windowsize(i)), '_ODX.xlsx']; 
@@ -96,8 +97,8 @@ for i = 2:length(windowsize)
     gridid = cellfun(@(v) v(2:end), gridid, 'uni', 0);
     gridid = cellfun(@(v) strsplit(v,'_'), gridid, 'uni', 0);
     
-    for j = 1:length(samples)
-        temp = cellfun(@(v) strcmp([v{1} '_' v{2}],samples{j}), gridid);
+    for j = 1:length(files)
+        temp = cellfun(@(v) strcmp([v{1} '_' v{2}],files{j}), gridid);
         tempgrid = [gridid{temp}];
         tempgrid = reshape(tempgrid,3,[]);
         tempgrid = cellfun(@str2num, tempgrid(3,:));
@@ -108,9 +109,9 @@ for i = 2:length(windowsize)
 end
 
 %% figures
-for i = 1:length(samples)
+for i = 1:length(files)
     disp('Preparing plots..')
-    imgfile = ['HE\' samples{i} '.png'];
+    imgfile = ['HE\' files{i} '.png'];
     if exist(imgfile, 'file')
         I = imread(imgfile);
         I = imresize(I,1);
@@ -119,7 +120,7 @@ for i = 1:length(samples)
     end
     oncotypeplot_f(RiskGroup(i,2:end), Polygon(i,2:end), windowsize(2:end)*0.2, 0.2, I);
     mkdir('OncotypeDX\');
-    saveas(gcf,['OncotypeDX\' samples{i} '.fig']);
+    saveas(gcf,['OncotypeDX\' files{i} '.fig']);
     
 %     RiskGroup = [RiskGroup; [samples{i},{risk}]];
 %     All(i,:) = [{name},{pos},{quality}];
