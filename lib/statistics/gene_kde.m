@@ -1,6 +1,8 @@
 function density = gene_kde(name, pos, query, bandwidth, imfile, scale)
+% density = gene_kde(name, pos, query, bandwidth, imfile, scale)
 % density estimate of a gene
-% Xiaoyan, 2017
+% output is at image scale/5 
+% Xiaoyan, 2018
 
 % image size
 imsize = imfinfo(imfile);
@@ -12,12 +14,12 @@ if nargin <= 5
 end
 
 pos = correctcoord(pos, .2);
-[uNames, ~, idxName] = unique(name);
+[uNames, ~, iName] = unique(name);
 
-idxNamePlot = find(strcmp(uNames, query));
+iNamePlot = find(strcmp(uNames, query));
 
-if ~isempty(idxNamePlot)
-    posPlot = pos(idxName == idxNamePlot,:);
+if ~isempty(iNamePlot)
+    posPlot = pos(iName == iNamePlot,:);
     try
         [~, density] = kde2d_modified...
             (posPlot, 2^10, [0 0],...

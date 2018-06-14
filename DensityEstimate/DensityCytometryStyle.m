@@ -6,7 +6,7 @@ clear;
 drawnow;
 
 %% parameters
-decoded_file = 'C:\Worky\Temp\QT_0.4_1e-20_details.csv';
+decoded_file = 'E:\PROOOJECTS\test_dataset\QT_0.35_0.004_details.csv';
 image = 'C:\Worky\Temp\TissueA_Fluo_staining.png';   % important for size
 name_density = 'HER2';
 bandwid = 50;
