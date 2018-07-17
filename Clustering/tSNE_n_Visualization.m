@@ -54,8 +54,8 @@ end
 
 % write
 mkdir(output_directory);
-csvwrite(fullfile(output_directory, 'tNSE_3D.csv'), Y);
-csvwrite(fullfile(output_directory, 'tNSE_initial.csv'), seeds);
+csvwrite(fullfile(output_directory, 'tSNE_3D.csv'), Y);
+csvwrite(fullfile(output_directory, 'tSNE_initial.csv'), seeds);
 
 
 
