@@ -61,7 +61,7 @@ grid on
 % barplot: comparison between top two classes
 [~, TopClasses] = sort(o.pCellClass(MyCell,:), 'descend');
 %              TopClasses(1) = strmatch('Calb2.Cntnap5a.Rspo3', ClassNames);
-             TopClasses(2) = strmatch('Cck.Cxcl14.Calb1.Igfbp5', ClassNames);
+%              TopClasses(2) = strmatch('Cck.Cxcl14.Calb1.Igfbp5', ClassNames);
 GeneContrib = WeightMap(TopClasses(1),:) -  WeightMap(TopClasses(2),:);
 [sorted, order] = sort(GeneContrib);
 figure (986544);
