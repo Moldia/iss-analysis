@@ -6,7 +6,7 @@ clear;
 close all;
 
 %% modify here
-tsne_3d_file = 'E:\PROOOJECTS\test_dataset\tNSE_3D_green.csv';
+tsne_3d_file = 'E:\PROOOJECTS\test_dataset\tSNE_3D_green.csv';
 hexbin_file = 'E:\PROOOJECTS\test_dataset\HexbinClustering_GeneCount_300.csv';
 hexbin_size = 300;
 genes_to_show = {'ACTA2' 'TP53' 'PR'};     % if empty, all genes will be shown one by one
