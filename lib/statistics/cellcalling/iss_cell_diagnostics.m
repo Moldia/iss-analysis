@@ -1,4 +1,4 @@
-function iss_cell_diagnostics(MyCell, o, gSet, CellMap, GeneNames, CellGeneCount, eGeneGamma)
+function iss_cell_diagnostics(MyCell, o, gSet, CellMap, GeneNames, CellGeneCount, eGeneGamma, secondclass)
 % iss_cell_diagnostics(MyCell, o, gSet, CellMap, GeneNames, CellGeneCount, eGeneGamma)
 
 
@@ -16,10 +16,16 @@ end
 
 % class posterior
 fprintf('-- Class Posteriors --\n');
-for cc=find(o.pCellClass(MyCell,:)>1e-3)
-    fprintf('%s:\t%e\n', ClassNames{cc}, o.pCellClass(MyCell,cc));
+if nargin > 7
+    for cc=find(o.pCellClass(MyCell,:)>1e-3 | strcmp(secondclass, ClassNames)')
+        fprintf('%s:\t%e\n', ClassNames{cc}, o.pCellClass(MyCell,cc));
+    end
+else
+    for cc=find(o.pCellClass(MyCell,:)>1e-3)
+        fprintf('%s:\t%e\n', ClassNames{cc}, o.pCellClass(MyCell,cc));
+    end
 end
-
+    
 % negative binomial
 rp = regionprops(CellMap);
 CellArea0 = vertcat(rp.Area);
@@ -60,8 +66,12 @@ grid on
 
 % barplot: comparison between top two classes
 [~, TopClasses] = sort(o.pCellClass(MyCell,:), 'descend');
-%              TopClasses(1) = strmatch('Calb2.Cntnap5a.Rspo3', ClassNames);
-%              TopClasses(2) = strmatch('Cck.Cxcl14.Calb1.Igfbp5', ClassNames);
+% TopClasses(1) = strmatch('Calb2.Cntnap5a.Rspo3', ClassNames);
+% TopClasses(2) = strmatch('Cacna2d1.Lhx6.Reln', ClassNames);
+
+if nargin > 7
+    TopClasses(2) = strmatch(secondclass, ClassNames);
+end
 GeneContrib = WeightMap(TopClasses(1),:) -  WeightMap(TopClasses(2),:);
 [sorted, order] = sort(GeneContrib);
 figure (986544);
