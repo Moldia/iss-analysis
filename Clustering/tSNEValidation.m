@@ -23,7 +23,7 @@ counts = data.data(:,2:end-2);
 
 % load tSNE results
 tsne_3d = csvread(tsne_3d_file);
-tsne_rgb = xyz2rgb(tsne_3d);
+tsne_rgb = rgbscale(tsne_3d);
 
 if isempty(genes_to_show)
     genes_to_show = genes;

@@ -41,7 +41,7 @@ title('tSNE dim reduction to three, shown first two');
 if ~hexbin_size;	hexbin_size = 5;    end
 figure; hold on;
 scale = 1;
-Yrgb = xyz2rgb(Y);
+Yrgb = rgbscale(Y);
 for i = 1:size(Yrgb,1)
     [gridR, gridL, xypos] = hexbin_coord2grid(pos(i,:), hexbin_size);
     [vy, vx] = dot2poly(pos(i,2)*scale,pos(i,1)*scale,...
