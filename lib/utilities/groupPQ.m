@@ -1,7 +1,7 @@
 function Group = groupPQ(Idx_PQ)
 % for droplet barcoding
-% main script: FindCombs_BruteForce
-% Xiaoyan, 2016-2-29
+% recursive grouping
+% Xiaoyan, 2016
 
 
 
