@@ -11,7 +11,7 @@ output_fileprefix = 'pooled_bincounts';
 %%
 % which files to pool
 fid = fopen(batch_input_file, 'r');
-files = textscan(fid, '%s');
+files = textscan(fid, '%s', 'delimiter', '\n');
 files = files{:};
 fclose(fid);
 

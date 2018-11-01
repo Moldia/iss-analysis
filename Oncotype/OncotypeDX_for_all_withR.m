@@ -1,7 +1,6 @@
 %% files to read
 samples = ls();
 files = cellstr(files(3:end,:));
-% files = {'C:\Users\Xiaoyan\Downloads\QT_0.35_0.004_details.csv'};
 windowsize = 1000:1000:10000;
 
 %% read and import

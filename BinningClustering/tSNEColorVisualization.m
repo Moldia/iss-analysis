@@ -1,6 +1,8 @@
 % visualize pooled tSNE results on top of background images
 % Xiaoyan, 2018
 
+clear; close all;
+
 %% modify here
 tSNE_results = 'tSNE_3D.csv';
 hexbin_counts = 'pooled_bincounts_count.csv';   % already binned data, with the row names specifying sample and bin#
@@ -28,12 +30,15 @@ fclose(fid);
 % load tSNE results
 Y = csvread(tSNE_results);
 
-% visualize tSNE in RGB (no background)
+% visualize tSNE in RGB
 if ~hexbin_size;	hexbin_size = 5;    end
 Yrgb = rgbscale(Y);
 
 for s = 1:numel(uSamples)
-    figure; imshow(imfiles{s});
+    figure; 
+    try
+        imshow(imfiles{s});
+    end
     hold on;
     for i = 1:nnz(iSample==s)
         pos_sample = pos(iSample==s,:);

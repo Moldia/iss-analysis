@@ -1,8 +1,11 @@
 % use bin count data to run PCA and tSNE
 % Xiaoyan, 2018
 
+clear; close all;
+
+
 %% modify here
-hexbin_counts = 'pooled_bincounts_count.csv';  % already binned data (pooled or not), requires header
+hexbin_counts = 'pooled_bincounts_count.csv';  % already binned data (pooled or not), requires header, compatible with output from BatchHexBin
 hexbin_position = 'pooled_bincounts_binpos.csv';    % bin position file generated at the same time as bin count file
 hexbin_size = 500; % if single-cell data, hexbin_size = 0;
 output_directory = '';
@@ -25,7 +28,7 @@ idx = cellfun(@(v) find(strcmp(v, cNames)), cbValues(:,1));
 isSelected = false(numel(idx), 1);
 isSelected(idx) = cell2mat(cbValues(:,2));
 cGenes = table2array(tableCount(:,isSelected));
-genes = cNames(isSelected);
+genes = cNames(isSelected)'
 
 % PCA
 [coeff, score, latent] = pca(cGenes);
