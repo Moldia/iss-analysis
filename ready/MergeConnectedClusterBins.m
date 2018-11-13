@@ -1,16 +1,19 @@
-% merge spatially connected hexagonal bins (e.g. from clustering)
+% merge spatially connected hexagonal bins (e.g. requires clustering)
 % Xiaoyan, 2017
 
-%% input
+clear; close all;
+
+%% modify here
 hexbin_cluster_file = 'HexbinClustering_GeneCount_MaxNorm.csv';    % last three columns: x pos, y pos, cluster id
-hexagon_radius = 300;
+hexagon_radius = 600;
 output_directory = '';
-min_cluster_member = 8;     % minimum number of bins in a connected spatial patch
+min_cluster_member = 20;     % minimum number of bins in a connected spatial patch
 
 background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
 
-%% 
+%% do not modify
+
 % load data
 data = importdata(hexbin_cluster_file);
 iCluster = data.data(:,end);

@@ -3,12 +3,13 @@
 % Xiaoyan, 2017
 
 
-%% input
+%% modify here
 batch_input_file = 'files_to_pool.txt';
 hexagon_radius = 500;
 output_fileprefix = 'pooled_bincounts';
 
-%%
+%% do not modify
+
 % which files to pool
 fid = fopen(batch_input_file, 'r');
 files = textscan(fid, '%s', 'delimiter', '\n');

@@ -2,14 +2,15 @@
 % Xiaoyan, 2018
 
 
-%% parameters
+%% modify here
 hexbin_count_file = 'HexbinClustering_GeneCount_all_BlueClust.csv';
 num_clusters = 3;
 output_directory = '';
 background_image = '';
 scale = 1;      % scale of background image
 
-%%
+%% do not modify
+
 % import
 data = importdata(hexbin_count_file);
 if ismember('cluseter_id', data.colheaders)

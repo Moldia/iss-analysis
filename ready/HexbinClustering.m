@@ -1,17 +1,18 @@
 % unsupervised clustering (kmeans) of spatial data
-% transcript counts in every grid is normalized by the maximum counts
+% transcript counts in every hexbin is normalized by the maximum counts
 % Xiaoyan, 2017
 
-%% input
-hexagon_radius = 400;
-decoded_file = 'QT_0.35_0.0001_details_900196_1.csv';
+%% modify here
+hexagon_radius = 600;
+decoded_file = 'JS breast samples\DCIS(1)\Decoding 3 bases\QT_0.35_1e-07_details.csv';
 num_clusters = 3;
 output_directory = '';
 
 background_image = '';    % can be empty if not needed for visualization
 scale = 0.2;    % image scale
 
-%% 
+%% do not modify
+
 % transcripts
 [name, pos] = getinsitudata(decoded_file);
 [name, pos] = removereads(name, 'NNNN', pos);
@@ -55,9 +56,9 @@ cGenes_sumnorm = bsxfun(@rdivide, cGenes_selected, sum(cGenes_selected,1));
 
 
 % kmeans
-disp('Starting kmeans clustering with 100 replicates..');
+disp('Starting kmeans clustering with 500 replicates..');
 [iCluster, centroid] = kmeans(cGenes_maxnorm', num_clusters,...
-    'Distance', 'sqeuclidean', 'Replicates', 100);
+    'Distance', 'sqeuclidean', 'Replicates', 500);
 
 % write files (only selected)
 cNames = {'grid_num', uNames{isSelected}, 'center_x', 'center_y'};
