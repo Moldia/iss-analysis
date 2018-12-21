@@ -5,7 +5,7 @@
 
 %% modify here
 batch_input_file = 'files_to_pool.txt';
-hexagon_radius = 500;
+hexagon_radius = 500;   % in pixel
 output_fileprefix = 'pooled_bincounts';
 
 %% do not modify

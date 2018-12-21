@@ -3,7 +3,7 @@
 % Xiaoyan, 2017
 
 %% modify here
-hexagon_radius = 600;
+hexagon_radius = 600;   % in pixel
 decoded_file = 'JS breast samples\DCIS(1)\Decoding 3 bases\QT_0.35_1e-07_details.csv';
 num_clusters = 3;
 output_directory = '';

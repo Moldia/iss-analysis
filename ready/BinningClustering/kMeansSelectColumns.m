@@ -1,4 +1,4 @@
-% use count data to run k-means clusetering
+% use count data to run k-means clustering
 % select which columns to include
 % Xiaoyan, 2017
 

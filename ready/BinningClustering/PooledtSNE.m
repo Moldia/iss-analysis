@@ -7,7 +7,7 @@ clear; close all;
 %% modify here
 hexbin_counts = 'pooled_bincounts_count.csv';  % already binned data (pooled or not), requires header, compatible with output from BatchHexBin
 hexbin_position = 'pooled_bincounts_binpos.csv';    % bin position file generated at the same time as bin count file
-hexbin_size = 500; % if single-cell data, hexbin_size = 0;
+hexbin_size = 500;   % in piexels, if single-cell data use hexbin_size = 0
 output_directory = '';
 
 %% do not modify
