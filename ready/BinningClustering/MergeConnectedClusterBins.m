@@ -1,11 +1,11 @@
-% merge spatially connected hexagonal bins (e.g. requires clustering)
+% merge spatially connected hexagonal bins (requires clustered data)
 % Xiaoyan, 2017
 
 clear; close all;
 
 %% modify here
 hexbin_cluster_file = 'HexbinClustering_GeneCount_MaxNorm.csv';    % last three columns: x pos, y pos, cluster id
-hexagon_radius = 600;
+hexagon_radius = 600;   % in pixels
 output_directory = '';
 min_cluster_member = 20;     % minimum number of bins in a connected spatial patch
 
