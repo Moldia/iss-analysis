@@ -27,7 +27,7 @@
 %             'assemble_stitched_image_flag'
 %             'log_file_path'
 
-% modified by Xiaoyan, 2017
+% modified by Xiaoyan, 2019
 
 function stitch_time_slice(input_directory, img_name_grid, output_directory, output_prefix, time_slice, repeatability, ...
 percent_overlap_error, blend_method, alpha, save_stitched_image, assemble_from_metadata, log_file_path, estimated_overlap_x,...
@@ -141,7 +141,7 @@ end
 if save_stitched_image
   print_to_command('Assembling output stitched image', log_file_path);
   I = assemble_stitched_image(input_directory, img_name_grid, global_y_img_pos, global_x_img_pos, tile_weights, blend_method, alpha, imgstack);
-  img_name = strcat(output_prefix,sprintf('stitched-%d.tif',time_slice));
+  img_name = strcat(output_prefix,sprintf('stitched-%d.tif',imgstack));
   print_to_command(['Saving output image: ' img_name], log_file_path);
   if isa(I, 'single') || isa(I, 'double')
     % save as a 32bit floating point TIFF

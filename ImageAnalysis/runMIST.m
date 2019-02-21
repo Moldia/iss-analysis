@@ -31,6 +31,7 @@ output_directory = 'Stitched';
 output_prefix = 'stitchtest';
 save_stitched_image = 1;
 assemble_from_metadata = 0;     % apply the same to other images
+imgstack = 1;
 
 % % no overlap
 % create_zero_percent_overlap_mosaic(input_directory, img_name_grid,...
@@ -42,5 +43,5 @@ stitch_time_slice(input_directory, img_name_grid,...
     'Max', 0,...        % blending method
     save_stitched_image, assemble_from_metadata,...
     [output_directory '\logtest.txt'],...
-    10, 10)
+    10, 10, 2);
 
