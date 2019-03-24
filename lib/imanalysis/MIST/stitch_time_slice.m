@@ -80,6 +80,7 @@ if assemble_from_metadata
       current_assemble_img_flag = save_stitched_image;
       cur_blend_method = blend_method;
       current_imgstack = imgstack;
+      current_img_name_grid = img_name_grid;
 
             
       % load the metadata mat file
@@ -103,6 +104,8 @@ if assemble_from_metadata
       save_stitched_image = current_assemble_img_flag;
       blend_method = cur_blend_method;
       imgstack = current_imgstack;
+      img_name_grid = current_img_name_grid;
+      
       
     end
   catch err
