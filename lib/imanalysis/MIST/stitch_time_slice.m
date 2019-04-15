@@ -151,7 +151,13 @@ if save_stitched_image
     save_32_tiff(I, [output_directory img_name]);
   else
     % save as a 8 or 16 bit grayscale TIFF
-    imwrite(I, [output_directory img_name]);
+    try
+        imwrite(I, [output_directory img_name]);
+    catch ME
+        if contains(ME.identifier, 'tooMuchData')
+            save([output_directory img_name '.mat'], 'I', '-v7.3');
+        end
+    end
   end
   clear I;
 end
