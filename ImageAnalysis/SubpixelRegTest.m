@@ -55,7 +55,7 @@ tic
 [tform, Greg] = dftregistration(fft2(I1), fft2(I2), 20);
 tform
 
-I2reg = padimg(I2, -round(tform(4)), -round(tform(3)), 'NW');
+I2reg = padimg(I2, round(tform(4)), round(tform(3)), 'NW');
 toc
 
 % inverse FFT
