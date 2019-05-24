@@ -3,29 +3,31 @@
 % Xiaoyan, 2017
 
 
-% parpool
-tilepos = getcsvtilepos('..\Tiled_170526.csv');
+%% input
+tilepos = getcsvtilepos('..\..\exported\Tiled_s3_b0ref.csv');
+blobfile = '..\..\CP_190420\s3\Decoding_b124\QT_0.35_0.0001_details.csv';
 
-tilesize = tilepos(2,2)-tilepos(1,2);
-ntilesX = range(tilepos(:,2))/tilesize + 1;
-ntilesY = range(tilepos(:,3))/tilesize + 1;
+%% stitching and edge correction
+tilesize = 2000;
+ntilesX = max(tilepos(:,2)/tilesize) + 1;
+ntilesY = max(tilepos(:,3)/tilesize) + 1;
 
-ndigits = ceil(log10(ntilesX*ntilesY));
+ndigits = 0;
 
 mkdir('Stitched');
 mkdir('ParentCell')
 mkdir('CellBlobs');
 
-%% relabel tile object images outputed from CP
+% relabel tile object images outputed from CP
 Ilabeled = cell(ntilesY,ntilesX);
 Ioutlines = cell(ntilesY,ntilesX);
 
 for i = 1:ntilesY
-    fprintf('%.2f percet read.\n', (i-1)/ntilesY*100);
+    fprintf('%.2f percent read.\n', (i-1)/ntilesY*100);
     parfor j = 1:ntilesX
         t = ntilesX*(i-1)+j;
-        I = imread(['CP_170526_Cell\Segmentation\NucleiLabel_', paddigits(t,ndigits), '.tif']);
-        Ivis = imread(['CP_170526_Cell\Outlines\overlayOutlines_' paddigits(t,ndigits) '.png']);
+        I = imread(['Segmentation\tile', num2str(t), '_Nuclei.tif']);
+        Ivis = imread(['Outlines\tile', num2str(t), '.png']);
         I = relabelimg(I);
         Ilabeled(i,j) = {I};
         Ioutlines(i,j) = {Ivis};
@@ -33,7 +35,7 @@ for i = 1:ntilesY
     
 end  
 clear I Ivis
-fprintf('100 percet finished.\n');
+fprintf('100 percent finished.\n');
 
 % stitched outline images for visualization
 resizef = .5;
@@ -42,31 +44,35 @@ Ivis = resizestitch([ntilesX,ntilesY], tilesize, resizef, Ioutlines);
 %% relate blobs to parent cell (if not done in CellProfiler)
 Icell = cell(ntilesY,ntilesX);
 for i = 1:ntilesY
-    fprintf('%.2f percet read.\n', (i-1)/ntilesY*100);
+    fprintf('%.2f percent read.\n', (i-1)/ntilesY*100);
     parfor j = 1:ntilesX
         t = ntilesX*(i-1)+j;
-        I = imread(['CP_170526_Cell\Segmentation\CellLabel_', paddigits(t,ndigits), '.tif']);
+        I = imread(['Segmentation\tile', num2str(t), '_Cell.tif']);
         Icell(i,j) = {relabelimg(I)};
     end  
 end  
 clear I
-fprintf('100 percet finished.\n');
+fprintf('100 percent finished.\n');
 
-[~, pos] = getinsitudata('..\QT_0.4_0.004_details.csv');
+[~, pos] = getinsitudata(blobfile);
 pos = correctcoord(pos, 1);     % difference between zero indexing (Python) and non-zero indexing
 cellid = zeros(length(pos),1);
 for i = 1:ntilesY
     for j = 1:ntilesX
-        in = readsinsqr(pos, tilesize*[j-1 i-1 j i]+.5);
+        in = readsinsqr(pos, tilesize*[j-1 j i-1 i]+.5);
         postmp = bsxfun(@minus, pos(in,:), tilesize*[j-1 i-1]);
         postmp = readsinroi(postmp, Icell{i,j});
         cellid(in) = postmp;
     end
 end
-writeblobwcell('..\QT_0.4_0.004_details.csv', cellid, 'ParentCell\QT_0.4_0.004');
+writeblobwcell(blobfile, cellid, 'QT0.35');
 
-%% cell properties
-cellprop = csvread('CP_170526_Cell\Cells.csv', 1);     % needs area, centroid position
+%% cell/nuclei properties
+cellprop = importdata('Nuclei.csv');     % needs area, centroid position
+% cellprop: image number, object number, tile number, area, x, y
+cellprop = [cellfun(@str2num, cellprop.textdata(2:end,1)),...
+    cellfun(@str2num, cellprop.textdata(2:end,2)),...
+    cellprop.data(:,[3,4:6])];
 
 % cell global position
 if size(cellprop,2) > 3
@@ -80,6 +86,8 @@ else
     warning('Too few columns detected in cell property file.') 
 end
 
+% cellprop(:,[1,2]) = cellprop(:,[2,1]);
+
 %% find objects cut by tiling lines
 [CellCorrectionTable, CellProps, Ioutlines] = correct_edge_objects...
     (Ilabeled, Ioutlines, cellprop, tilepos, Ivis, resizef);
@@ -91,7 +99,29 @@ imwrite(Ivis, ['Stitched\Outlines_' num2str(resizef*100) '%.jpg']);
 IvisHD = resizestitch([ntilesX,ntilesY], tilesize, 1, Ioutlines);
 imwrite(IvisHD, 'Stitched\Outlines_100%.jpg');
 
-clear Ilabeled Ioutlines IvisHD
+%% stitch full section DAPI label image and expand
+% IlabelCorrected = Ilabeled;
+% parfor i = 1:length(IlabelCorrected(:))
+%     if ~isempty(CellCorrectionTable{i})
+%         for j = fliplr(CellCorrectionTable{i}(:,1)')
+%             IlabelCorrected{i}(IlabelCorrected{i} == j) = ...
+%                 CellCorrectionTable{i}(CellCorrectionTable{i}(:,1)==j,2);
+%         end
+%     end
+% end
+% LabelDapiWhole = resizestitch([ntilesX,ntilesY], tilesize, resizef, IlabelCorrected);
+% 
+% [D, idx] = bwdist(LabelDapiWhole);
+% D = uint32(D<=20);
+% L = reshape(LabelDapiWhole(idx(:)), size(LabelDapiWhole));
+% LabelCellWhole = D.*L;
+% 
+% IOutlines = LabelCellWhole ~= imerode(LabelCellWhole, strel('disk', 2));
+% 
+% imwrite(IOutlines, 'Stitched\Outlines.jpg');
+% save('Stitched\LabelImages', 'LabelCellWhole', 'LabelDapiWhole');
+
+% clear Ilabeled Ioutlines IvisHD
 
 %% correct cell properties (area, centroid position)
 %  properties should be from expanded objects ("real parents")
@@ -101,7 +131,7 @@ hold on
 % renumber cells
 cellrenumber = renumberedgeobj...
     ([ntilesX,ntilesY], CellCorrectionTable, CellProps, 2);
-[uniCell, ~, idxCell] = unique(cellrenumber);
+[uniCell, ~, idxCell] = unique(cellrenumber, 'stable');
 countCell = hist(idxCell, 1:length(uniCell));
 fid = fopen('Stitched\UniqueCells.txt', 'w');
 fprintf(fid, '%d\n', uniCell);
@@ -136,47 +166,44 @@ end
 
 [~,idxsort] = sort(CellPropsRenum(:,1));
 CellPropsRenum = CellPropsRenum(idxsort,:);
-fid = fopen('Stitched\ExpandedCells.csv', 'w');
+fid = fopen('Stitched\Cells.csv', 'w');
 fprintf(fid, 'CellID,metadata_position,area,global_x_pos,global_y_pos\n');
 fprintf(fid, '%d,%d,%d,%d,%d\n', reshape(CellPropsRenum',[],1));
 fclose(fid);
 save('Stitched\CellLookupTable.mat', 'CellPropsRenum', '-append');
 
-%% blob cell relation
-% parentcell = csvread('blobs.csv', 1);
-parentcell = csvread('QT_0.4_0.004_details_wCell.csv', 1, 3);
-columnCell = 6;
+%% parent cell based on expanded full section DAPI label
+% [~, pos] = getinsitudata(blobfile);
+% pos = correctcoord(pos, 1);     % difference between zero indexing (Python) and non-zero indexing
+% parentcellNew = readsinroi(pos, LabelCellWhole);
+% 
+% writeblobwcell(blobfile, parentcellNew, 'beforeQT');
 
-% original tile size different cell segmentation tile size
-tileid = ceil(pos/2000);
-tileid = (tileid(:,2)-1)*ntilesX + tileid(:,1);
-parentcell(:,3) = tileid;
+%% blob cell relation     
+parentcell = csvread('ParentCell\QT0.35_details_wCell.csv', 1, 3);
+columnCell = 7;
+
+% % original tile size different cell segmentation tile size
+% tileid = ceil(pos/2000);
+% tileid = (tileid(:,2)-1)*ntilesX + tileid(:,1);
+% parentcell(:,3) = tileid;
 
 parentcellNew = renumberedgeobj...
     ([ntilesX,ntilesY], CellCorrectionTable, parentcell, columnCell);
 
 towrite = [(1:size(parentcell,1))', parentcell(:,3), parentcellNew]';
-fid = fopen('ParentCell\ParentCell_AllRefBlobs.csv', 'w');
+fid = fopen('ParentCell\ParentCell_QT0.35Blobs.csv', 'w');
 fprintf(fid,'blob_num, metadata_position, Parent_Cell\n');
 fprintf(fid, '%d,%d,%d\n', towrite(:));
-fclose(fid);                                                                    
+fclose(fid);                                                                                                                                    
 
 %% label child blobs and get single cell profile
-% % before QT
+% before QT
 % parent = findparentcell('..\CP_170122_Seq\Decoding\beforeQT.mat',...
 %     'blob_allbt', parentcellNew);
-% csvwrite('ParentCell\ParentCell_beforeQT.csv', parent);
-% writeblobwcell('..\CP_170122_Seq\Decoding\beforeQT_details.csv',...
-%     parent, 'beforeQT');
-% childblobs('ParentCell\beforeQT_details_wCell.csv',...
-%     parent, CellPropsRenum, 'beforeQT');
-
-% after QT
-% parent = findparentcell('..\CP_170122_Seq\Decoding\QT_0.45_0.0001.mat',...
-%     'blob_allqt', parentcellNew);
-% csvwrite('ParentCell\ParentCell_QT_0.45.csv', parent);
-writeblobwcell('..\QT_0.4_0.004_details.csv',...
-    parentcellNew, 'QT_0.4');
-childblobs('ParentCell\QT_0.4_details_wCell.csv',...
-    parentcellNew, CellPropsRenum, 'QT_0.4');
+parent = parentcellNew;
+csvwrite('ParentCell\ParentCell_QT0.35.csv', parent);
+writeblobwcell(blobfile, parent, 'QT0.35_b124');
+childblobs('ParentCell\QT0.35_details_wCell.csv',...
+    parent, CellPropsRenum, 'QT0.35_b124');
 
