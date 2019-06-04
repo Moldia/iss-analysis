@@ -25,7 +25,7 @@ if nargin <= 3
     col = 'w';
 end
 
-if nargin <= 4
+if nargin <= 4 || isempty(textpos)
     textpos = {'bottom', 'center'};
 end
 
