@@ -16,7 +16,7 @@ end
 xrange = get(gca, 'xlim');
 yrange = get(gca, 'ylim');
 
-if nargin <= 2
+if nargin <= 2 || isempty(barpos)
     barpos(1) = (xrange(2) - unit/pixelscaling)*.95;
     barpos(2) = yrange(2)*.97;
 end
@@ -25,7 +25,7 @@ if nargin <= 3
     col = 'w';
 end
 
-if nargin <= 4
+if nargin <= 4 || isempty(textpos)
     textpos = {'bottom', 'center'};
 end
 
