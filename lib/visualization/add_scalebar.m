@@ -25,7 +25,7 @@ if nargin <= 3
     col = 'w';
 end
 
-if nargin <= 4 || isempty(textpos)
+if nargin <= 4
     textpos = {'bottom', 'center'};
 end
 
@@ -49,6 +49,10 @@ else
 end
 
 if ~isempty(textpos)
+    if strcmp(textpos, 'default')
+        textpos = {'bottom', 'center'};
+    end
+        
     if strcmp(orientation, 'horizontal')
         text(barpos(1)+unit/pixelscaling/2, barpos(2),...
             [num2str(unit) ' \mum'],...
