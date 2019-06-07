@@ -9,10 +9,14 @@ fid = fopen(['ParentCell\', outprefix, '_details_wCell.csv'], 'w');
 fmt = lineformat('%s', size(blob.textdata,2)+1);
 header = [blob.textdata(1,:), {'Parent_Cell'}];
 fprintf(fid, fmt, header{:});
-blobwrite = [blob.textdata(2:end,1:2),...
+blobwrite = [blob.textdata(2:end,1:(size(blob.textdata,2)-size(blob.data,2))),...
     num2cell([blob.data, double(parentcell)])]';
-fmt = lineformat('%d', length(header)-2);
-fmt = ['%s,%s,', fmt];
+% fmt = lineformat('%d', length(header)-2);
+% fmt = ['%s,%s,', fmt];
+
+fmt = lineformat('%d', size(blob.data,2)+1);
+fmt = [repmat('%s,', 1, length(header)-(size(blob.data,2)+1)), fmt];
+
 fprintf(fid, fmt, blobwrite{:});
 fclose(fid);
 
